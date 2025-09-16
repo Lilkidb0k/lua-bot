@@ -390,7 +390,13 @@ end
 @d Equivalent to `Message.channel:send(content)`.
 ]=]
 function Message:reply(content)
-	return self._parent:send(content)
+	if type(content) == "table" then
+        content.reference = { message = self.id }
+    else
+        content = { content = content, reference = { message = self.id } }
+    end    
+
+    return self._parent:send(content)
 end
 
 --[=[
