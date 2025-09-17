@@ -1,8 +1,13 @@
+local tools = _G.tools
+
+local slashCommand = tools.slashCommand("message", "Use the message builder.")
+
 return {
     name = "message",
-    description = "Start the interactive message builder",
+    description = "Use the message builder.",
     aliases = { "msg" },
-    callback = function(message, args)
-        _G.messageBuilder(message, true)
+    slashCommand = slashCommand,
+    hybridCallback = function(interaction, args)
+        _G.messageBuilder(interaction, true)
     end
 }

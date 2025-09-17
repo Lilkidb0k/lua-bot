@@ -1,43 +1,95 @@
 -- main.lua
+local startTime = 0
+local totalStartTime = os.clock()
+
+print("\n[STARTUP] - Initializing application...")
+
+-------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing discordia...")
+startTime = os.clock()
 local discordia = require("discordia")
+print("[STARTUP] - Initialized discordia in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
+print("[STARTUP] - Initializing SECRETS...")
+startTime = os.clock()
 local SECRETS = require("SECRETS")
+_G.SECRETS = SECRETS
+print("[STARTUP] - Initialized SECRETS in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
-local client = discordia.Client()
-
--------------------------------------------------------------------------------------------------------------
-
+print("[STARTUP] - Initializing fs...")
+startTime = os.clock()
 local fs = require("fs")
+_G.fs = fs
+print("[STARTUP] - Initialized fs in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
+print("[STARTUP] - Initializing discordia-modals...")
+startTime = os.clock()
 local dmodals = require("discordia-modals")
 _G.dmodals = dmodals
+print("[STARTUP] - Initialized discordia-modals in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
+print("[STARTUP] - Initializing discordia-components...")
+startTime = os.clock()
 require("discordia-components")
+print("[STARTUP] - Initialized discordia-components in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
+print("[STARTUP] - Initializing discordia-interactions...")
+startTime = os.clock()
 require("discordia-interactions")
+print("[STARTUP] - Initialized discordia-interactions in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
+print("[STARTUP] - Initializing discordia-slash...")
+startTime = os.clock()
+local dslash = require("discordia-slash")
+_G.dslash = dslash
+print("[STARTUP] - Initialized discordia-slash in " .. (os.clock() - startTime) .. " seconds.\n")
+
+-------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing discordia-slash tools...")
+startTime = os.clock()
+local tools = dslash.util.tools()
+_G.tools = tools
+print("[STARTUP] - Initialized discordia-slash tools in " .. (os.clock() - startTime) .. " seconds.\n")
+
+-------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing client...")
+startTime = os.clock()
+local client = discordia.Client()
+client:useApplicationCommands()
+print("[STARTUP] - Initialized client in " .. (os.clock() - startTime) .. " seconds.\n")
+
+-------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing enums...")
+startTime = os.clock()
 local prefix = "!"
 
 local commands = {}
 
--------------------------------------------------------------------------------------------------------------
-
 _G.discordia = discordia
 _G.client = client
 
+print("[STARTUP] - Initialized enums in " .. (os.clock() - startTime) .. " seconds.\n")
+
 -------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing assets...")
+startTime = os.clock()
 
 local emojis = {
     success = "<:success:1417593854659399722>",
@@ -72,6 +124,13 @@ local colors = {
     loading = 0xF5FF82,
     yellow = 0xF5FF82,
 }
+
+print("[STARTUP] - Initialized assets in " .. (os.clock() - startTime) .. " seconds.\n")
+
+-------------------------------------------------------------------------------------------------------------
+
+print("[STARTUP] - Initializing helper functions...")
+startTime = os.clock()
 
 local function split(inputstr, sep)
     if sep == nil then
@@ -151,9 +210,14 @@ end
 
 _G.junkStr = junkStr
 
+print("[STARTUP] - Initialized helper functions in " .. (os.clock() - startTime) .. " seconds.\n")
+
 -------------------------------------------------------------------------------------------------------------
 
-local function loadCommands()
+print("[STARTUP] - Initializing main functions...")
+startTime = os.clock()
+
+local function loadCommands(loadSlash, slashToLoad)
 
     local c = 0
     local cmdFolder = fs.readdirSync("./commands")
@@ -197,6 +261,42 @@ local function loadCommands()
 
     _G.commands = commands
     _G.loadCommands = loadCommands
+
+    if loadSlash then
+        if slashToLoad then
+            print("[SLASH] - Loading slash command | 1 to load")
+            for i, command in pairs(commands) do
+                if command.name:lower() == slashToLoad:lower() then
+                    if command.slashCommand then
+                        print("[SLASH] - Loading " .. command.name)
+                        local s, e = client:createGlobalApplicationCommand(command.slashCommand)
+                        if e then
+                            print("[SLASH] - Failed to create application command /" .. command.name .. " | " .. e)
+                        else
+                            print("[SLASH] - Created application command - /" .. command.name)
+                        end
+                    else
+                        print("[SLASH] - " .. command.name .. " does not support a Slash Command")
+                    end
+                end
+            end
+        else
+            print("[SLASH] - Loading slash commands | " .. #commands .. " to load")
+            for i, command in pairs(commands) do
+                if command.slashCommand then
+                    print("[SLASH] - Loading " .. command.name)
+                    local s, e = client:createGlobalApplicationCommand(command.slashCommand)
+                    if e then
+                        print("[SLASH] - Failed to create application command /" .. command.name .. " | " .. e)
+                    else
+                        print("[SLASH] - Created application command - /" .. command.name)
+                    end
+                else
+                    print("[SLASH] - " .. command.name .. " does not support a Slash Command")
+                end
+            end
+        end
+    end
 
     return c, errors
 end
@@ -715,7 +815,8 @@ end
 
 _G.embedBuilder = embedBuilder
 
-local function messageBuilder(message, sendMessage)
+local function messageBuilder(source, sendMessage)
+    local isInteraction = source and source.reply and not source.content
     local messageEditorCops = discordia.Components()
         :selectMenu{
             id = "editproperty",
@@ -751,7 +852,7 @@ local function messageBuilder(message, sendMessage)
     local messageState = {
         content = "Welcome to the " .. emojis.document .. " **Message Builder**. You can edit this message using the dropdown menu below. Once you are finished editing your message, click " .. emojis.successWhite .. " **Save**.",
         embed = nil,
-        channelId = message.channel.id
+        channelId = (source.channel and source.channel.id) or (source.channel_id)
     }
 
     local function updateDisplay(msg, state)
@@ -766,12 +867,20 @@ local function messageBuilder(message, sendMessage)
         msg:setEmbed(state.embed or nil)
     end
 
-    local sentMessage = message:replyComponents({
-        content = messageState.content,
-        components = messageEditorCops
-    })
+    local sentMessage
+    if isInteraction then
+        sentMessage = source:reply({
+            content = messageState.content,
+            components = messageEditorCops
+        })
+    else
+        sentMessage = source:replyComponents({
+            content = messageState.content,
+            components = messageEditorCops
+        })
+    end
 
-    onComp(sentMessage, nil, nil, message.author.id, false, function(ia)
+    onComp(sentMessage, nil, nil, source.author and source.author.id or source.user.id, false, function(ia)
         local id = ia.data.custom_id
         local selected = ia.data.values and ia.data.values[1]
 
@@ -878,36 +987,113 @@ end
 
 _G.messageBuilder = messageBuilder
 
+local function getCommand(query)
+    for i, command in pairs(commands) do
+        if command.name:lower() == query then
+            return command
+        end
+
+        for _, alias in pairs(command.aliases) do
+            if alias:lower() == query then
+                return command
+            end
+        end
+    end
+
+    return nil
+end
+
+print("[STARTUP] - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
+
 -------------------------------------------------------------------------------------------------------------
 
-client:on("ready", function()
-    loadCommands()
+print("[STARTUP] - Initializing events...")
+startTime = os.clock()
 
-   print("Logged in as " .. client.user.username)
+client:on("ready", function()
+    loadCommands(false, nil)
+
+    print("[STARTUP] - Initialized application in " .. (os.clock() - totalStartTime) .. " seconds.\n")
 end)
 
 -------------------------------------------------------------------------------------------------------------
 
 client:on("messageCreate", function(message)
-    if message.author.bot then return end
-
-    local content = message.content:lower()
-    if content:sub(1, #prefix) ~= prefix then return end
-    
-    local args = {}
-    for word in content:sub(#prefix+1):gmatch("%S+") do
-        table.insert(args, word)
-    end
-
-    local cmdName = table.remove(args, 1)
-    local command = commands[cmdName]
-
-    if command then
-        command.callback(message, args)
-    else
+    if message.author.bot then
         return
     end
+    if (not message.guild) or (not message.member) or (not message.member.guild) then
+        return
+    end
+
+    local mentionPrefix = message.content:sub(1,client.user.mentionString:len() + 1) == client.user.mentionString .. " "
+
+    if (message.content:sub(1, prefix:len()):lower() ~= prefix:lower()) and (not mentionPrefix) then
+        return
+    end
+
+    local args = {}
+
+    if mentionPrefix then
+        args = split(message.content:sub(client.user.mentionString:len() + 2), " ")
+    else
+        args = split(message.content:sub(prefix:len() + 1), " ")
+    end
+
+    local command = getCommand(args[1]:lower())
+
+    if not command then
+        return
+    end
+
+    table.remove(args, 1)
+
+    local cmdCb = (command.hybridCallback) or (command.callback)
+
+    local subcmd = args and args[1]
+    local s, e = pcall(cmdCb, message, args, nil, subcmd)
+    if not s then
+        return message:reply({
+            embed = {
+                description = emojis.error .. " An error occured while running this command.\n> -# " .. emojis.right .. " " .. e
+            },
+            ephemeral = true
+        })
+    end
 end)
+
+client:on("slashCommand", function(interaction, command, args)
+    local cmd = nil
+
+    for i, v in pairs(commands) do
+        if v.name:lower() == command.name:lower() then
+            cmd = v
+        end
+    end
+
+    if not cmd then
+        return
+    end
+
+    local cmdCb = (cmd.hybridCallback) or (cmd.slashCallback)
+
+    local _, subcmd = tools.getSubCommand(command)
+    local s, e = pcall(cmdCb, interaction, args, command, subcmd)
+    if not s then
+        return interaction:reply({
+            embed = {
+                description = emojis.error .. " An error occured while running that command.\n> -# " .. emojis.right .. " " .. e
+            },
+            ephemeral = true
+        })
+    end
+    local _, subcmd = tools.getSubCommand(command)
+    if not interaction.user then
+        return print("UNLOGGED COMMAND | interaction.user is not available?")
+    end
+end)
+
+print("[STARTUP] - Initialized events in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
