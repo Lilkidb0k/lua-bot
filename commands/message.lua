@@ -1,3 +1,4 @@
+-- message.lua
 local tools = _G.tools
 
 local slashCommand = tools.slashCommand("message", "Use the message builder.")

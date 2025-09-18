@@ -2,134 +2,157 @@
 local startTime = 0
 local totalStartTime = os.clock()
 
-print("\n[STARTUP] - Initializing application...")
+local cc = {
+    reset = "\27[0m",
+    red = "\27[31m",
+    green = "\27[32m",
+    yellow = "\27[33m",
+    blue = "\27[34m",
+    magenta = "\27[35m",
+    cyan = "\27[36m",
+    white = "\27[37m",
+}
+
+local function startupLog(name, func, color)
+    color = color or cc.cyan
+    io.write(color .. "[STARTUP]" .. cc.reset .. " - Initializing " .. name .. "...\n")
+    startTime = os.clock()
+    local result
+    if func then
+        result = func()
+    end
+    io.write(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized " .. name .. " in " .. string.format("%.4f", os.clock() - startTime) .. " seconds.\n\n")
+    return result
+end
+
+print(cc.yellow .. "\n[STARTUP]" .. cc.reset .. " - Initializing application...\n")
 
 -------------------------------------------------------------------------------------------------------------
 
-print("[STARTUP] - Initializing discordia...")
-startTime = os.clock()
-local discordia = require("discordia")
-print("[STARTUP] - Initialized discordia in " .. (os.clock() - startTime) .. " seconds.\n")
+local discordia = startupLog("discordia", function()
+    return require("discordia")
+end)
+
+local SECRETS = startupLog("SECRETS", function()
+    local s = require("SECRETS")
+    _G.SECRETS = s
+    return s
+end)
+
+local dmodals = startupLog("discordia-modals", function()
+    local d = require("discordia-modals")
+    _G.dmodals = d
+    return d
+end)
+
+startupLog("discordia-components", function()
+    require("discordia-components")
+end)
+
+startupLog("discordia-interactions", function()
+    require("discordia-interactions")
+end)
+
+local dslash = startupLog("discordia-slash", function()
+    local ds = require("discordia-slash")
+    _G.dslash = ds
+    return ds
+end)
+
+local tools = startupLog("discordia-slash tools", function()
+    local t = dslash.util.tools()
+    _G.tools = t
+    return t
+end)
+
+local client = startupLog("client", function()
+    local c = discordia.Client()
+    c:useApplicationCommands()
+    _G.client = c
+    return c
+end)
+
+local fs = startupLog("fs", function()
+    local f = require("fs")
+    _G.fs = f
+    return f
+end)
+
+local json = startupLog("json", function()
+    local j = require("json")
+    _G.json = j
+    return j
+end)
+
+local timer = startupLog("timer", function()
+    local t = require("timer")
+    _G.timer = t
+    return t
+end)
+
+local sqlite3 = startupLog("sqlite3", function()
+    local s = require("sqlite3")
+    _G.sqlite3 = s
+    return s
+end)
+
+local sqldb = startupLog("sqldb", function()
+    local s = require("sqldb")
+    _G.sqldb = s
+    return s
+end)
 
 -------------------------------------------------------------------------------------------------------------
 
-print("[STARTUP] - Initializing SECRETS...")
-startTime = os.clock()
-local SECRETS = require("SECRETS")
-_G.SECRETS = SECRETS
-print("[STARTUP] - Initialized SECRETS in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing fs...")
-startTime = os.clock()
-local fs = require("fs")
-_G.fs = fs
-print("[STARTUP] - Initialized fs in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing discordia-modals...")
-startTime = os.clock()
-local dmodals = require("discordia-modals")
-_G.dmodals = dmodals
-print("[STARTUP] - Initialized discordia-modals in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing discordia-components...")
-startTime = os.clock()
-require("discordia-components")
-print("[STARTUP] - Initialized discordia-components in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing discordia-interactions...")
-startTime = os.clock()
-require("discordia-interactions")
-print("[STARTUP] - Initialized discordia-interactions in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing discordia-slash...")
-startTime = os.clock()
-local dslash = require("discordia-slash")
-_G.dslash = dslash
-print("[STARTUP] - Initialized discordia-slash in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing discordia-slash tools...")
-startTime = os.clock()
-local tools = dslash.util.tools()
-_G.tools = tools
-print("[STARTUP] - Initialized discordia-slash tools in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing client...")
-startTime = os.clock()
-local client = discordia.Client()
-client:useApplicationCommands()
-print("[STARTUP] - Initialized client in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing enums...")
-startTime = os.clock()
-local prefix = "!"
+startupLog("enums", function()
+    _G.discordia = discordia
+    _G.client = client
+end)
 
 local commands = {}
+-------------------------------------------------------------------------------------------------------------
 
-_G.discordia = discordia
-_G.client = client
+local assets = startupLog("assets", function()
+    local emojis = {
+        success = "<:success:1417593854659399722>",
+        fail = "<:fail:1417593871625486448>",
+        warning = "<:warning:1417593882941591653>",
+        error = "<:error:1417593896078282914>",
+        right = "<:right:1417641757658710126>",
+        left = "<:left:1417641781230567548>",
+        loading = "<a:loading:1417641823928717342>",
+        channel = "<:channel:1417641871827664987>",
+        document = "<:document:1417641979977924728>",
+        successWhite = "<:successWhite:1417643517802577980>",
+        failWhite = "<:failWhite:1417643534500106240>",
+        add = "<:Add:1417643700565180437>",
+        remove = "<:Remove:1417643712468488395>",
+        text = "<:text:1417805385217085480>",
+        paragraph = "<:paragraph:1417800211509809252>",
+        edit = "<:edit:1417800671876616252>",
+        image = "<:image:1417800829498294402>",
+        delete = "<:delete:1417877399495770312>",
+        color = "<:color:1417880278294069359>"
+    }
 
-print("[STARTUP] - Initialized enums in " .. (os.clock() - startTime) .. " seconds.\n")
+    local colors = {
+        blank = 0x37373E,
+        success = 0x66FF66,
+        fail = 0xFF6666,
+        info = 0x5C8FFF,
+        warning = 0xFFC72B,
+        heavyred = 0xB51A00,
+        error = 0xB51A00,
+        loading = 0xF5FF82,
+        yellow = 0xF5FF82,
+    }
+
+    return {emojis = emojis, colors = colors}
+end)
 
 -------------------------------------------------------------------------------------------------------------
 
-print("[STARTUP] - Initializing assets...")
-startTime = os.clock()
-
-local emojis = {
-    success = "<:success:1417593854659399722>",
-    fail = "<:fail:1417593871625486448>",
-    warning = "<:warning:1417593882941591653>",
-    error = "<:error:1417593896078282914>",
-    right = "<:right:1417641757658710126>",
-    left = "<:left:1417641781230567548>",
-    loading = "<a:loading:1417641823928717342>",
-    channel = "<:channel:1417641871827664987>",
-    document = "<:document:1417641979977924728>",
-    successWhite = "<:successWhite:1417643517802577980>",
-    failWhite = "<:failWhite:1417643534500106240>",
-    add = "<:Add:1417643700565180437>",
-    remove = "<:Remove:1417643712468488395>",
-    text = "<:text:1417805385217085480>",
-    paragraph = "<:paragraph:1417800211509809252>",
-    edit = "<:edit:1417800671876616252>",
-    image = "<:image:1417800829498294402>",
-    delete = "<:delete:1417877399495770312>",
-    color = "<:color:1417880278294069359>"
-}
-
-local colors = {
-    blank = 0x37373E,
-    success = 0x66FF66,
-    fail = 0xFF6666,
-    info = 0x5C8FFF,
-    warning = 0xFFC72B,
-    heavyred = 0xB51A00,
-    error = 0xB51A00,
-    loading = 0xF5FF82,
-    yellow = 0xF5FF82,
-}
-
-print("[STARTUP] - Initialized assets in " .. (os.clock() - startTime) .. " seconds.\n")
-
--------------------------------------------------------------------------------------------------------------
-
-print("[STARTUP] - Initializing helper functions...")
+print(cc.cyan .. "[STARTUP]" .. cc.reset .. "- Initializing helper functions...")
 startTime = os.clock()
 
 local function split(inputstr, sep)
@@ -171,14 +194,14 @@ end
 
 local resolvedEmojis = {}
 
-for i, e in pairs(emojis) do
+for i, e in pairs(assets.emojis) do
 resolvedEmojis[i] = resolveEmoji(e)
 end
 
 _G.resolvedEmojis = resolvedEmojis
 _G.resolveEmoji = resolveEmoji
-_G.emojis = emojis
-_G.colors = colors
+_G.emojis = assets.emojis
+_G.colors = assets.colors
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -210,11 +233,11 @@ end
 
 _G.junkStr = junkStr
 
-print("[STARTUP] - Initialized helper functions in " .. (os.clock() - startTime) .. " seconds.\n")
+print(cc.green .. "[STARTUP]" .. cc.reset .. "- Initialized helper functions in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
-print("[STARTUP] - Initializing main functions...")
+print(cc.cyan .. "[STARTUP]" .. cc.reset .. " - Initializing main functions...")
 startTime = os.clock()
 
 local function loadCommands(loadSlash, slashToLoad)
@@ -224,10 +247,10 @@ local function loadCommands(loadSlash, slashToLoad)
     local errors = {}
 
     for i, commandFileName in pairs(cmdFolder) do
-        print("[CMDS] - Loading " .. commandFileName)
+        print(cc.cyan .. "\n[CMDS]" .. cc.reset .. " - Loading " .. commandFileName)
         local filestr, err = load(fs.readFileSync("commands/" .. commandFileName))
         if err then
-            print("[CMDS] - Syntax error in " .. commandFileName .. " | " .. err)
+            print(cc.yellow .. "[CMDS]" .. cc.reset .. " - Syntax error in " .. commandFileName .. " | " .. err)
             table.insert(errors, {
                 fileName = commandFileName,
                 errorType = "Syntax",
@@ -239,7 +262,7 @@ local function loadCommands(loadSlash, slashToLoad)
                 cmd = filestr()
             end)
             if err then
-                print("[CMDS] - Runtime error in " .. commandFileName .. " | " .. err)
+                print(cc.red .. "[CMDS]" .. cc.reset .. " - Runtime error in " .. commandFileName .. " | " .. err)
                 table.insert(errors, {
                     fileName = commandFileName,
                     errorType = "Runtime",
@@ -254,7 +277,7 @@ local function loadCommands(loadSlash, slashToLoad)
                     end
                 end
                 c = c + 1
-                print("[CMDS] - Loaded " .. cmd.name .. " | " .. i .. "/" .. #cmdFolder)
+                print(cc.green .. "[CMDS]" .. cc.reset .. " - Loaded " .. cmd.name .. " | " .. i .. "/" .. #cmdFolder)
             end
         end
     end
@@ -264,35 +287,35 @@ local function loadCommands(loadSlash, slashToLoad)
 
     if loadSlash then
         if slashToLoad then
-            print("[SLASH] - Loading slash command | 1 to load")
+            print(cc.cyan .. "\n[SLASH]" .. cc.reset .. " - Loading slash command | 1 to load")
             for i, command in pairs(commands) do
                 if command.name:lower() == slashToLoad:lower() then
                     if command.slashCommand then
-                        print("[SLASH] - Loading " .. command.name)
+                        print(cc.cyan .. "\n[SLASH]" .. cc.reset .. " - Loading " .. command.name)
                         local s, e = client:createGlobalApplicationCommand(command.slashCommand)
                         if e then
-                            print("[SLASH] - Failed to create application command /" .. command.name .. " | " .. e)
+                            print(cc.red .. "[SLASH]" .. cc.reset .. " - Failed to create application command /" .. command.name .. " | " .. e)
                         else
-                            print("[SLASH] - Created application command - /" .. command.name)
+                            print(cc.green .. "[SLASH]" .. cc.reset .. " - Created application command - /" .. command.name)
                         end
                     else
-                        print("[SLASH] - " .. command.name .. " does not support a Slash Command")
+                        print(cc.magenta .. "[SLASH]" .. cc.reset .. " - " .. command.name .. " does not support a Slash Command")
                     end
                 end
             end
         else
-            print("[SLASH] - Loading slash commands | " .. #commands .. " to load")
+            print(cc.cyan .. "\n[SLASH]" .. cc.reset .. " - Loading slash commands | " .. #commands .. " to load")
             for i, command in pairs(commands) do
                 if command.slashCommand then
-                    print("[SLASH] - Loading " .. command.name)
+                    print(cc.cyan .. "\n[SLASH]" .. cc.reset .. " - Loading " .. command.name)
                     local s, e = client:createGlobalApplicationCommand(command.slashCommand)
                     if e then
-                        print("[SLASH] - Failed to create application command /" .. command.name .. " | " .. e)
+                        print(cc.red .. "[SLASH]" .. cc.reset .. " - Failed to create application command /" .. command.name .. " | " .. e)
                     else
-                        print("[SLASH] - Created application command - /" .. command.name)
+                        print(cc.green .. "[SLASH]" .. cc.reset .. " - Created application command - /" .. command.name)
                     end
                 else
-                    print("[SLASH] - " .. command.name .. " does not support a Slash Command")
+                    print(cc.magenta .. "[SLASH]" .. cc.reset .. " - " .. command.name .. " does not support a Slash Command")
                 end
             end
         end
@@ -993,9 +1016,11 @@ local function getCommand(query)
             return command
         end
 
-        for _, alias in pairs(command.aliases) do
-            if alias:lower() == query then
-                return command
+        if command.aliases then
+            for _, alias in pairs(command.aliases) do
+                if alias:lower() == query then
+                    return command
+                end
             end
         end
     end
@@ -1003,17 +1028,17 @@ local function getCommand(query)
     return nil
 end
 
-print("[STARTUP] - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
+print(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
-print("[STARTUP] - Initializing events...")
+print(cc.cyan .. "[STARTUP]" .. cc.reset .. " - Initializing events...")
 startTime = os.clock()
 
 client:on("ready", function()
     loadCommands(false, nil)
 
-    print("[STARTUP] - Initialized application in " .. (os.clock() - totalStartTime) .. " seconds.\n")
+    print(cc.yellow .. "\n[STARTUP]" .. cc.reset .. " - Initialized application in " .. (os.clock() - totalStartTime) .. " seconds.\n")
 end)
 
 -------------------------------------------------------------------------------------------------------------
@@ -1026,6 +1051,9 @@ client:on("messageCreate", function(message)
         return
     end
 
+    local config = sqldb:get(message.guild.id) or {}
+
+    local prefix = config.prefix or "!"
     local mentionPrefix = message.content:sub(1,client.user.mentionString:len() + 1) == client.user.mentionString .. " "
 
     if (message.content:sub(1, prefix:len()):lower() ~= prefix:lower()) and (not mentionPrefix) then
@@ -1055,7 +1083,8 @@ client:on("messageCreate", function(message)
     if not s then
         return message:reply({
             embed = {
-                description = emojis.error .. " An error occured while running this command.\n> -# " .. emojis.right .. " " .. e
+                description = emojis.error .. " An error occured while running this command.\n> -# " .. emojis.right .. " " .. e,
+                color = _G.colors.error
             },
             ephemeral = true
         })
@@ -1093,7 +1122,7 @@ client:on("slashCommand", function(interaction, command, args)
     end
 end)
 
-print("[STARTUP] - Initialized events in " .. (os.clock() - startTime) .. " seconds.\n")
+print(cc.green .. "[STARTUP]" .. cc.reset .. "- Initialized events in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
 
