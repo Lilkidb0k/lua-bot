@@ -1091,6 +1091,20 @@ client:on("messageCreate", function(message)
     end
 end)
 
+client:on("slashCommandAutocomplete", function(interaction, command, focused, args)
+    if interaction and interaction.id and interaction.guild and interaction.user and interaction.member and interaction.channel and command and command.name then
+        local cmd = nil
+
+        for i, v in pairs(commands) do
+            if v.name:lower() == command.name:lower() then
+                if v.autocomplete then
+                    coroutine.wrap(pcall)(v.autocomplete, interaction, command, focused, args)
+                end
+            end
+        end
+    end
+end)
+
 client:on("slashCommand", function(interaction, command, args)
     local cmd = nil
 
