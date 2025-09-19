@@ -34,7 +34,7 @@ return {
                 })
             else
                 config.prefix = newPrefix
-                sqldb:set(guildId, { prefix = config.prefix }, "EDIT_PREFIX")
+                sqldb:set(guildId, { prefix = config.prefix }, "EDIT_PREFIX_COMMAND")
 
                 return message:reply({
                     embed = {

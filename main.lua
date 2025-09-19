@@ -136,7 +136,10 @@ local assets = startupLog("assets", function()
         edit = "<:edit:1417800671876616252>",
         image = "<:image:1417800829498294402>",
         delete = "<:delete:1417877399495770312>",
-        color = "<:color:1417880278294069359>"
+        color = "<:color:1417880278294069359>",
+        setting = "<:setting:1418649947158614079>",
+        module = "<:module:1418651372773179484>",
+        wrench = "<:wrench:1418662249953759254>",
     }
 
     local colors = {
@@ -1171,6 +1174,27 @@ client:on("messageCreate", function(message)
         return
     end
 
+    if config then
+        local disabledcommands = config.disabledcommands or {}
+        local isDisabled = false
+    
+        for _, c in pairs(disabledcommands) do
+            if c == command.name then
+                isDisabled = true
+                break
+            end
+        end
+    
+        if isDisabled then
+            return message:reply({
+                embed = {
+                    description = _G.emojis.fail .. " This command has been disabled by server management",
+                    color = _G.colors.fail
+                }
+            })
+        end
+    end
+
     table.remove(args, 1)
 
     local canuse = parsePerms(message, command, message.member)
@@ -1218,6 +1242,30 @@ client:on("slashCommand", function(interaction, command, args)
 
     if not cmd then
         return
+    end
+
+    local config = sqldb:get(interaction.guild.id) or {}
+
+    if config then
+        local disabledcommands = config.disabledcommands or {}
+        local isDisabled = false
+    
+        for _, c in pairs(disabledcommands) do
+            if c == command.name then
+                isDisabled = true
+                break
+            end
+        end
+    
+        if isDisabled then
+            return interaction:reply({
+                embed = {
+                    description = _G.emojis.fail .. " This command has been disabled by server management.",
+                    color = _G.colors.fail
+                },
+                ephemeral = true
+            })
+        end
     end
 
     local canuse = parsePerms(interaction, command, interaction.member)
