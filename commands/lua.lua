@@ -25,7 +25,7 @@ end
 return {
     name = "lua",
     description = "Execute lua code.",
-    requiredPermissions = { "BOT_DEVELOPER" },
+    requiredPermissions = { "DEVELOPER" },
     callback = function(message, args)
 
         local toexec = table.concat(args, " ")
@@ -215,7 +215,7 @@ return {
                     }
                 })
 
-                task.wait(0.3) -- short delay before sending file
+                timer.sleep(30)
 
                 response.channel:send({
                     files = { { "output.txt", tosendlines } }

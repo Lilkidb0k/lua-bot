@@ -19,7 +19,10 @@ return {
         end
 
         local prefix = config.prefix
-        local newPrefix = args and args[1]
+        local newPrefix
+        if args[1] and _G.hasPerms(message.member, "MANAGE_SERVER") then
+            newPrefix = args[1]
+        end
 
         if newPrefix then
             if newPrefix:len() > 5 then

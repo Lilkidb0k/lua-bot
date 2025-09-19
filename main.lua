@@ -65,6 +65,10 @@ local tools = startupLog("discordia-slash tools", function()
     return t
 end)
 
+startupLog("discordia.extensions()", function()
+    discordia.extensions() 
+end)
+
 local client = startupLog("client", function()
     local c = discordia.Client()
     c:useApplicationCommands()
@@ -1010,6 +1014,12 @@ end
 
 _G.messageBuilder = messageBuilder
 
+-------------------------------------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------------------------------------
+
 local function getCommand(query)
     for i, command in pairs(commands) do
         if command.name:lower() == query then
@@ -1026,6 +1036,93 @@ local function getCommand(query)
     end
 
     return nil
+end
+
+-------------------------------------------------------------------------------------------------------------
+
+local perms = {
+    ["DEVELOPER"] = function(member)
+        return member.id == "445152230132154380" or member.id == "995664658038005772"
+    end,
+
+    ["MANAGE_SERVER"] = function(member)
+        return member:hasPermission("manageGuild")
+    end,
+
+    ["SETUP"] = function(member)
+        if sqldb:get(member.guild.id) then
+            return true
+        else
+            return "NOT_SETUP"
+        end
+    end
+}
+
+local function hasPerms(member, perm)
+    local permFunction = perms[perm]
+    if permFunction then
+        return true
+    else
+        return false
+    end
+end
+
+_G.hasPerms = hasPerms
+
+local function permFail(interaction, command, text)
+    if type(command) == "string" then
+        command = {
+            name = command
+        }
+    end
+    interaction:reply({
+        embed = {
+            description = emojis.fail .. " " .. text,
+            color = colors.fail
+        }
+    }, true)
+    return false
+end
+
+_G.permFail = permFail
+
+local function parsePerms(interaction, command, member)
+    if (not command.requiredPermissions) then
+        return true
+    end
+    for _, v in pairs(command.requiredPermissions) do
+        local perm = perms[v]
+        if not perm then
+            interaction:reply(emojis.warning .. " Unknown permission: `" .. tostring(v) .. "`")
+            return
+        end
+        local res = perm(member)
+
+        local ns = false
+
+        if type(res) == "string" and res:sub(1, 9) == "NOT_SETUP" then
+            ns = true
+        end
+
+        if v ~= "DEVELOPER" and v ~= "SETUP" and
+            ns == false then
+            if member:hasPermission("manageGuild") then
+                print(v .. " | Bypassed by manageGuild")
+                res = true
+            end
+        end
+        print(member.username .. " | " .. v .. " | " .. tostring(res))
+        local config = sqldb:get(interaction.guild.id) or {}
+        if res == "NOT_SETUP" then
+            return permFail(interaction, command, "The bot has not been setup! Run `/setup` to get started.")
+        end
+
+        if res == false then
+            return permFail(interaction, command, "You do not have the `" .. v .. "` permission to use this command!")
+        end
+    end
+
+    return true
 end
 
 print(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
@@ -1076,6 +1173,11 @@ client:on("messageCreate", function(message)
 
     table.remove(args, 1)
 
+    local canuse = parsePerms(message, command, message.member)
+    if not canuse then
+        return
+    end
+
     local cmdCb = (command.hybridCallback) or (command.callback)
 
     local subcmd = args and args[1]
@@ -1115,6 +1217,11 @@ client:on("slashCommand", function(interaction, command, args)
     end
 
     if not cmd then
+        return
+    end
+
+    local canuse = parsePerms(interaction, command, interaction.member)
+    if not canuse then
         return
     end
 

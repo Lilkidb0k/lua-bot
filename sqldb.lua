@@ -85,14 +85,6 @@ local function transform_table(input, donotdecode)
 
   return result
 end
-function table.count(tbl)
-  if type(tbl) ~= "table" then return 0 end
-  local count = 0
-  for _ in pairs(tbl) do
-    count = count + 1
-  end
-  return count
-end
 
 -- End Helper Functions
 
