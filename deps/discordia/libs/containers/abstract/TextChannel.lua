@@ -235,9 +235,9 @@ end
 sent as the message content. If it is a table, more advanced formatting is
 allowed. See [[managing messages]] for more information.
 ]=]
-function TextChannel:send(content)
-
-	local data, err
+function TextChannel:send(content, silent)
+	local original = content
+    local data, err
 
 	if type(content) == 'table' then
 
@@ -303,13 +303,20 @@ function TextChannel:send(content)
 			end
 		end
 
-		local refMessage, refMention
+		local refMessage
+		local allowedMentions = {
+			parse = {'users', 'roles', 'everyone'}
+		}
+		if tbl.allowed_mentions or tbl.allowedMentions then
+			allowedMentions = tbl.allowed_mentions or tbl.allowedMentions
+		end
 		if tbl.reference then
 			refMessage = {message_id = Resolver.messageId(tbl.reference.message)}
-			refMention = {
-				parse = {'users', 'roles', 'everyone'},
-				replied_user = not not tbl.reference.mention,
-			}
+			allowedMentions.replied_user = not not tbl.reference.mention
+		end
+
+		if tbl.silent or silent then
+			allowedMentions = {parse = {}}
 		end
 
 		local sticker
@@ -317,21 +324,37 @@ function TextChannel:send(content)
 			sticker = {Resolver.stickerId(tbl.sticker)}
 		end
 
-		data, err = self.client._api:createMessage(self._id, {
+		local poll
+		if tbl.poll then
+			poll = tbl.poll
+		end
+
+		local components
+		if tbl.components then
+			components = tbl.components
+		end
+		
+		local tosend = {
 			content = content,
 			tts = tbl.tts,
 			nonce = tbl.nonce,
 			embeds = embeds,
 			message_reference = refMessage,
-			allowed_mentions = refMention,
+			allowed_mentions = allowedMentions,
 			sticker_ids = sticker,
-			flags = tbl.silent and 2^12 or nil,
-		}, files)
+			flags = tbl.suppress and 2^12 or nil,
+			poll = poll or nil,
+			components = components
+		}
+
+		data, err = self.client._api:createMessage(self._id, tosend, files)
+
+		if err and type(err) == "string" and err:lower():find("cannot send an empty message") then
+			p("discord called it an empty message", original, tosend)
+		end
 
 	else
-
 		data, err = self.client._api:createMessage(self._id, {content = content})
-
 	end
 
 	if data then

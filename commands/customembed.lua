@@ -12,27 +12,28 @@ local comps = discordia.Components()
     style = "success"
 }
 
+local slashCommand = _G.tools.slashCommand("customembed", "Custom Embed Sigma")
+
 return {
     name = "customembed",
     description = "Use embed editor to generate a custom embed",
-    callback = function(message, args)
+    slashCommand = slashCommand,
+    hybridCallback = function(interaction, args)
         local builtEmbed = nil
 
-        local r = message:replyComponents({
+        local r = interaction:reply({
             embed = {
                 description = _G.emojis.right .. " Use the buttons below to configure your embed.",
                 color = _G.colors.info
             },
-            components = comps
+            components = comps:raw()
         })
 
-        onComp(r, "button", nil, message.author.id, false, function(ia)
+        onComp(r, "button", nil, interaction.user and interaction.user.id or interaction.author.id, false, function(ia)
             local id = ia.data.custom_id
 
             if id == "customize_embed" then
-                -- open the embed builder
                 _G.embedBuilder(r, builtEmbed, function(finalEmbed, saved)
-                    -- store the final built embed when user clicks Save
                     builtEmbed = finalEmbed
                     r:setEmbed({
                             description = _G.emojis.right .. " Use the buttons below to configure your embed.\n\n" ..
@@ -52,8 +53,7 @@ return {
                     })
                 end
 
-                -- send the built embed
-                message.channel:send({
+                interaction.channel:send({
                     embed = builtEmbed
                 })
 

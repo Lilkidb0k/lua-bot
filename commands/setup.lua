@@ -99,11 +99,14 @@ return {
                 return "## " .. _G.emojis.setting .. " Configuration Menu\n"
                     .. "> Welcome to the " .. _G.emojis.setting .. " **Configuration Menu**. To get started configurating the bot, select an option below."
             elseif pageName == "bot_settings" then
+                local disabled = (config.disabledcommands and #config.disabledcommands > 0)
+                and table.concat(config.disabledcommands, ", ")
+                or "None"
                 return "## " .. _G.emojis.wrench .. " Bot Settings\n"
                     .. _G.emojis.right .. " Manage your bot’s prefix, disabled commands, and more.\n"
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
                     .. _G.emojis.right .. " **Prefix:** `" .. (config.prefix or "!") .. "`\n"
-                    .. _G.emojis.right .. " **Disabled Commands:** "
+                    .. _G.emojis.right .. " **Disabled Commands:** `" .. disabled .. "`"
             end
         end
 
@@ -157,7 +160,10 @@ return {
                     description = getEmbedDescription(currentPage),
                     color = _G.colors.info
                 },
-                components = getComps(currentPage)
+                components = getComps(currentPage),
+                reference = {
+                    message = ctx.id
+                }
             })
         end
 
@@ -187,6 +193,29 @@ return {
                         config.prefix = responses["Edit Prefix"]
                         sqldb:set(ctx.guild.id, { prefix = config.prefix }, "EDIT_PREFIX_SETUP")
 
+                        updatePage(mia, "bot_settings")
+                    end, true)
+
+                elseif choice == "edit_disabled_commands" then
+                    prompt(ia, "Edit Disabled Commands", {
+                        {
+                            question = "Disabled Commands",
+                            placeholder = "Enter commands separated by commas...",
+                            style = "paragraph",
+                            default = (config.disabledcommands and #config.disabledcommands > 0) and table.concat(config.disabledcommands, ",") or " ",
+                            required = false,
+                        }
+                    }, function(mia, responses)
+                        local input = responses["Disabled Commands"] or ""
+                        local commands = {}
+                        
+                        for cmd in string.gmatch(input, '([^,%s]+)') do
+                            table.insert(commands, cmd)
+                        end
+                        
+                        config.disabledcommands = commands
+                        sqldb:set(ctx.guild.id, { disabledcommands = config.disabledcommands }, "EDIT_DISABLED_COMMANDS_SETUP")
+                        
                         updatePage(mia, "bot_settings")
                     end, true)
                 end

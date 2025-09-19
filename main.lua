@@ -510,7 +510,7 @@ local function embedBuilder(triggerMessage, initialState, callback, triggerInter
 
     local embed = initialState or {
         title = emojis.document .. " Embed Builder",
-        description = "",
+        description = emojis.right .. " Welcome to the " .. emojis.document .. " **Embed Editor**. Use the dropdown menu below to customize your embed, once you are done click " .. emojis.successWhite .. " **Save**.",
         color = colors.info,
         fields = {},
         footer = { text = "" },

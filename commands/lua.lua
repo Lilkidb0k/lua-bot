@@ -201,6 +201,8 @@ return {
         local tosendlines = table.concat(lines, '\n')
         local sendasfile = #tosendlines > 1900
 
+        timer.sleep(50)
+
         if #lines ~= 0 then
             if sendasfile then
                 response:update({
@@ -214,8 +216,6 @@ return {
                         }
                     }
                 })
-
-                timer.sleep(30)
 
                 response.channel:send({
                     files = { { "output.txt", tosendlines } }
