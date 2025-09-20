@@ -1042,7 +1042,7 @@ end
 
 local perms = {
     ["DEVELOPER"] = function(member)
-        return member.id == "445152230132154380" or member.id == "995664658038005772"
+        return member.id == "445152230132154380" or member.id == "995664658038005772" --or member.id == "782235114858872854"
     end,
 
     ["MANAGE_SERVER"] = function(member)
@@ -1111,7 +1111,7 @@ local function parsePerms(interaction, command, member)
                 res = true
             end
         end
-        print(member.username .. " | " .. v .. " | " .. tostring(res))
+        print(member.username .. " | " .. command.name .. " | " .. v .. " | " .. tostring(res))
         local config = sqldb:get(interaction.guild.id) or {}
         if res == "NOT_SETUP" then
             return permFail(interaction, command, "The bot has not been setup! Run `/setup` to get started.")

@@ -97,6 +97,11 @@ local staff_management_module_menu = discordia.SelectMenu(
                 emoji = _G.resolvedEmojis.edit
             },
             {
+                label = "Edit Infraction Channel",
+                value = "edit_infraction_channel",
+                emoji = _G.resolvedEmojis.channel
+            },
+            {
                 label = "Add Infraction Type",
                 value = "add_infraction_type",
                 emoji = _G.resolvedEmojis.add
@@ -182,16 +187,14 @@ return {
                     .. _G.emojis.right .. " Select a module below to toggle and configure."
 
             elseif pageName == "staff_management_module_page" then
+                local smConfig = config.modules and config.modules.staff_management or {}
+                local infractionChannel = smConfig.infraction_channel and client:getChannel(smConfig.infraction_channel).mentionString or "N/A"
+
                 return "## " .. _G.emojis.tools .. " Staff Management\n"
-
                     .. _G.emojis.right .. " Manage your staff.\n"
-
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
-                    .. _G.emojis.right .. " **Module Enabled:** " .. (
-                        (config.modules.staff_management and config.modules.staff_management.enabled)
-                        and _G.emojis.success
-                        or _G.emojis.fail
-                    )
+                    .. _G.emojis.right .. " **Module Enabled:** " .. (smConfig.enabled and _G.emojis.success or _G.emojis.fail) .. "\n"
+                    .. _G.emojis.right .. " **Infraction Channel:** " .. infractionChannel .. "\n"
             end
         end
 
@@ -299,6 +302,15 @@ return {
                         local commands = {}
                         
                         for cmd in string.gmatch(input, '([^,%s]+)') do
+                            if cmd == "setup" then
+                                return mia:reply({
+                                    embed = {
+                                        description = _G.emojis.fail .. " You cannot disable to `/setup` command.",
+                                        color = _G.colors.fail
+                                    },
+                                    ephemeral = true
+                                })
+                            end
                             table.insert(commands, cmd)
                         end
                         
@@ -324,9 +336,61 @@ return {
                     local current = config.modules.staff_management.enabled
                     config.modules.staff_management.enabled = not current
 
-                    sqldb:set(ctx.guild.id, { modules = config.modules }, "TOGGLE_STAFF_MANAGEMENT_MODULE")
+                    sqldb:set(ctx.guild.id, { modules = config.modules }, "TOGGLE_STAFF_MANAGEMENT_MODULE_SETUP")
 
                     updatePage(ia, "staff_management_module_page")
+
+                elseif choice == "edit_infraction_channel" then
+                    local defaultValues = nil
+                    local defaults = config.modules.staff_management.infraction_channel
+
+                    if defaults then
+                        if type(defaults) == "table" then
+                            defaultValues = {}
+                            for _, defaultId in ipairs(defaults) do
+                                table.insert(defaultValues, { id = defaultId, type = "channel" })
+                            end
+                        else
+                            defaultValues = { { id = defaults, type = "channel" } }
+                        end
+                    else
+                        defaultValues = {}
+                    end
+
+                    local selectMenu = discordia.SelectMenu({
+                        id = "channelselect_" .. _G.junkStr(10),
+                        type = 8,
+                        placeholder = "Select a channel...",
+                        actionRow = 1,
+                        min_values = 0,
+                        max_values = 1,
+                        default_values = defaultValues
+                    })
+
+                    local r = ia:reply({
+                        components = discordia.Components():selectMenu(selectMenu):raw(),
+                        ephemeral = true
+                    })
+
+                    onComp(r, nil, nil, ia.user.id, true, function(cia)
+                        local selectedChannelId = cia.data.values and cia.data.values[1]
+                        if selectedChannelId then
+                            config.modules.staff_management.infraction_channel = selectedChannelId
+                            sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_CHANNEL_SETUP")
+
+                            ia:deleteReply(r.id)
+                            updatePage(ia, "staff_management_module_page")
+                        else
+                            config.modules.staff_management.infraction_channel = nil
+                            sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_CHANNEL_SETUP")
+
+                            ia:deleteReply(r.id)
+                            updatePage(ia, "staff_management_module_page")
+                        end
+                    end)
+
+                elseif choice == "edit_infraction_embed" then
+                    
                 end
             end
         end)

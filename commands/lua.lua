@@ -68,6 +68,7 @@ return {
         sandbox.ref = message.referencedMessage
         sandbox.sqldb = _G.sqldb
         sandbox.sqlite3 = _G.sqlite3
+        sandbox.fs = _G.fs
 
         sandbox.embed = nil
 
