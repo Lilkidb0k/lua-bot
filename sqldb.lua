@@ -27,8 +27,8 @@ local DEFAULT_CONFIG = {
     modules = {
         staff_management = {
             enabled = false,
-            infraction_types = {},
-            infraction_embed = {},
+            infraction_types = nil,
+            infraction_embed = nil,
             infraction_channel = nil
         },
     }

@@ -189,12 +189,14 @@ return {
             elseif pageName == "staff_management_module_page" then
                 local smConfig = config.modules and config.modules.staff_management or {}
                 local infractionChannel = smConfig.infraction_channel and client:getChannel(smConfig.infraction_channel).mentionString or "N/A"
+                local infractionEmbed = smConfig.infraction_embed and "Custom" or "N/A"
 
                 return "## " .. _G.emojis.tools .. " Staff Management\n"
                     .. _G.emojis.right .. " Manage your staff.\n"
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
                     .. _G.emojis.right .. " **Module Enabled:** " .. (smConfig.enabled and _G.emojis.success or _G.emojis.fail) .. "\n"
                     .. _G.emojis.right .. " **Infraction Channel:** " .. infractionChannel .. "\n"
+                    .. _G.emojis.right .. " **Infraction Embed:** " .. infractionEmbed .. "\n"
             end
         end
 
@@ -390,7 +392,19 @@ return {
                     end)
 
                 elseif choice == "edit_infraction_embed" then
-                    
+                    local builtEmbed = config.modules.staff_management.infraction_embed or nil
+
+                    local varList = {
+                        issuer_name = "The name of the user who issued the infraction.",
+                        server_name = "The name of the server.",
+                        server_id = "The ID of the server.",
+                    }
+                    _G.embedBuilder(ia, builtEmbed, function(finalEmbed, saved)
+                        builtEmbed = finalEmbed
+                        config.modules.staff_management.infraction_embed = builtEmbed
+                        sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_EMBED_SETUP")
+                        updatePage(ia, "staff_management_module_page")
+                    end, ia)
                 end
             end
         end)

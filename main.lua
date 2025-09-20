@@ -141,6 +141,7 @@ local assets = startupLog("assets", function()
         module = "<:module:1418651372773179484>",
         wrench = "<:wrench:1418662249953759254>",
         tools = "<:tools:1418904621316968570>",
+        variable = "<:variable:1419056037926801610>",
     }
 
     local colors = {
@@ -441,7 +442,7 @@ _G.prompt = prompt
 
 -------------------------------------------------------------------------------------------------------------
 
-local function embedBuilder(triggerMessage, initialState, callback, triggerInteraction)
+local function embedBuilder(triggerMessage, initialState, callback, triggerInteraction, variableList)
     local components = discordia.Components()
     :selectMenu{
         id = "editproperty",
@@ -508,6 +509,12 @@ local function embedBuilder(triggerMessage, initialState, callback, triggerInter
         emoji = resolvedEmojis.successWhite,
         style = "success"
     }
+    :button{
+        id = "embed_variable_list",
+        label = "Variables",
+        emoji = resolvedEmojis.variable,
+        style = "secondary"
+    }
 
     local embed = initialState or {
         title = emojis.document .. " Embed Builder",
@@ -518,6 +525,25 @@ local function embedBuilder(triggerMessage, initialState, callback, triggerInter
         author = { name = "" },
         thumbnail = { url = "" },
         image = { url = "" }
+    }
+
+    local function formatVariables(varTable)
+        if not varTable or next(varTable) == nil then
+            return emojis.right .. " *There are no variables available for this embed.*"
+        end
+
+        local lines = {}
+        for name, desc in pairs(varTable) do
+            table.insert(lines, string.format("> " .. emojis.right .. " `{%s}` - %s", name, desc))
+        end
+        table.sort(lines)
+        return table.concat(lines, "\n")
+    end
+
+    local variableEmbed = {
+        title = emojis.variable .. " Variable List",
+        description = formatVariables(variableList),
+        color = colors.blank,
     }
 
     local function safeUpdateLocal(state)
@@ -840,6 +866,11 @@ local function embedBuilder(triggerMessage, initialState, callback, triggerInter
             if callback then
                 callback(embed, true)
             end
+
+        elseif id == "embed_variable_list" then
+            ia:reply({
+                embed = variableEmbed
+            }, true)
         end
     end)
 end
