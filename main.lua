@@ -140,6 +140,7 @@ local assets = startupLog("assets", function()
         setting = "<:setting:1418649947158614079>",
         module = "<:module:1418651372773179484>",
         wrench = "<:wrench:1418662249953759254>",
+        tools = "<:tools:1418904621316968570>",
     }
 
     local colors = {
@@ -1019,10 +1020,6 @@ _G.messageBuilder = messageBuilder
 
 -------------------------------------------------------------------------------------------------------------
 
-
-
--------------------------------------------------------------------------------------------------------------
-
 local function getCommand(query)
     for i, command in pairs(commands) do
         if command.name:lower() == query then
@@ -1128,6 +1125,32 @@ local function parsePerms(interaction, command, member)
     return true
 end
 
+local function isModuleEnabled(guildId, moduleName)
+    local config = sqldb:get(guildId) or {}
+    return config.modules
+        and config.modules[moduleName]
+        and config.modules[moduleName].enabled
+end
+
+_G.isModuleEnabled = isModuleEnabled
+
+local function canRunCommand(interaction, command)
+    local config = sqldb:get(interaction.guild.id) or {}
+
+    if command.module then
+        if not isModuleEnabled(interaction.guild.id, command.module) then
+            return permFail(interaction, command,
+                "The `" .. command.name .. "` command is part of the **" .. command.module .. "** module, " ..
+                "which is currently disabled in this server."
+            )
+        end
+    end
+
+    return parsePerms(interaction, command, interaction.member)
+end
+
+_G.canRunCommand = canRunCommand
+
 print(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
 
 -------------------------------------------------------------------------------------------------------------
@@ -1189,6 +1212,15 @@ client:on("messageCreate", function(message)
             return message:reply({
                 embed = {
                     description = _G.emojis.fail .. " This command has been disabled by server management",
+                    color = _G.colors.fail
+                }
+            })
+        end
+
+        if command.module and not isModuleEnabled(message.guild.id, command.module) then
+            return message:reply({
+                embed = {
+                    description = _G.emojis.fail .. " The `" .. command.name .. "` command is part of the **" .. command.module .. "** module, which is currently disabled.",
                     color = _G.colors.fail
                 }
             })
@@ -1261,6 +1293,16 @@ client:on("slashCommand", function(interaction, command, args)
             return interaction:reply({
                 embed = {
                     description = _G.emojis.fail .. " This command has been disabled by server management.",
+                    color = _G.colors.fail
+                },
+                ephemeral = true
+            })
+        end
+        
+        if cmd.module and not isModuleEnabled(interaction.guild.id, cmd.module) then
+            return interaction:reply({
+                embed = {
+                    description = _G.emojis.fail .. " The `" .. cmd.name .. "` command is part of the **" .. cmd.module .. "** module, which is currently disabled.",
                     color = _G.colors.fail
                 },
                 ephemeral = true

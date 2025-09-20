@@ -20,6 +20,20 @@ conn:exec([[
 
 local sqldb = {}
 
+local DEFAULT_CONFIG = {
+    prefix = "!",
+    disabledcommands = {},
+
+    modules = {
+        staff_management = {
+            enabled = false,
+            infraction_types = {},
+            infraction_embed = {},
+            infraction_channel = nil
+        },
+    }
+}
+
 -- Helper Functions --
 local function encode_table(data)
   local succ, encoded = pcall(function()
@@ -85,7 +99,18 @@ local function transform_table(input, donotdecode)
 
   return result
 end
-
+local function deepMerge(defaults, target)
+    for k, v in pairs(defaults) do
+        if type(v) == "table" then
+            if type(target[k]) ~= "table" then
+                target[k] = {}
+            end
+            deepMerge(v, target[k])
+        elseif target[k] == nil then
+            target[k] = v
+        end
+    end
+end
 -- End Helper Functions
 
 -- Guild Config Functions --
@@ -171,15 +196,18 @@ end
 
 function sqldb:registerGuild(guild_id)
     local config = sqldb:get(guild_id)
+
     if type(config) ~= "table" then
-        config = { prefix = "!" }
+        config = table.clone(DEFAULT_CONFIG)
         local succ, res = sqldb:set(guild_id, config, "REGISTER_GUILD")
         if succ then
             config = res
-        else
-            config = { prefix = "!" }
         end
+    else
+        deepMerge(DEFAULT_CONFIG, config)
+        sqldb:set(guild_id, config, "MERGE_DEFAULTS")
     end
+
     return true, config
 end
 

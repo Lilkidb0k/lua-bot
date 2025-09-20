@@ -5,6 +5,8 @@ local tools = _G.tools
 
 local slashCommand = tools.slashCommand("setup", "Setup and configure to bot.")
 
+-------------------------------------------------------------------------------------------------------------
+
 local back_button = discordia.Button(
     {
         id = "back_button",
@@ -35,6 +37,25 @@ local configuration_menu = discordia.SelectMenu(
     }
 )
 
+local modules_menu = discordia.SelectMenu(
+    {
+        id = "modules_menu",
+        placeholder = "Select a module...",
+        min_values = 0,
+        max_values = 1,
+        actionRow = 1,
+        options = {
+            {
+                label = "Staff Management",
+                value = "staff_management_module",
+                emoji = _G.resolvedEmojis.tools
+            },
+        }
+    }
+)
+
+-------------------------------------------------------------------------------------------------------------
+
 local bot_settings_menu = discordia.SelectMenu(
     {
         id = "bot_settings_menu",
@@ -52,6 +73,43 @@ local bot_settings_menu = discordia.SelectMenu(
                 label = "Edit Disabled Commands",
                 value = "edit_disabled_commands",
                 emoji = _G.resolvedEmojis.edit
+            }
+        }
+    }
+)
+
+local staff_management_module_menu = discordia.SelectMenu(
+    {
+        id = "staff_management_module_menu",
+        placeholder = "Edit Configuration...",
+        min_values = 0,
+        max_values = 1,
+        actionRow = 1,
+        options = {
+            {
+                label = "Toggle Module",
+                value = "toggle_staff_management_module",
+                emoji = _G.resolvedEmojis.module
+            },
+            {
+                label = "Edit Infraction Embed",
+                value = "edit_infraction_embed",
+                emoji = _G.resolvedEmojis.edit
+            },
+            {
+                label = "Add Infraction Type",
+                value = "add_infraction_type",
+                emoji = _G.resolvedEmojis.add
+            },
+            {
+                label = "Edit Infraction Type",
+                value = "edit_infraction_type",
+                emoji = _G.resolvedEmojis.edit
+            },
+            {
+                label = "Remove Infraction Type",
+                value = "remove_infraction_type",
+                emoji = _G.resolvedEmojis.delete
             }
         }
     }
@@ -89,24 +147,51 @@ return {
         local function getComps(pageName)
             if pageName == "config_menu" then
                 return discordia.Components():selectMenu(configuration_menu):raw()
+
             elseif pageName == "bot_settings" then
                 return discordia.Components({ bot_settings_menu, back_button }):raw()
+
+            elseif pageName == "modules_menu" then
+                return discordia.Components({ modules_menu, back_button }):raw()
+
+            elseif pageName == "staff_management_module_page" then
+                return discordia.Components({ staff_management_module_menu, back_button }):raw()
             end
         end
 
         local function getEmbedDescription(pageName)
             if pageName == "config_menu" then
                 return "## " .. _G.emojis.setting .. " Configuration Menu\n"
+
                     .. "> Welcome to the " .. _G.emojis.setting .. " **Configuration Menu**. To get started configurating the bot, select an option below."
+
             elseif pageName == "bot_settings" then
                 local disabled = (config.disabledcommands and #config.disabledcommands > 0)
                 and table.concat(config.disabledcommands, ", ")
                 or "None"
                 return "## " .. _G.emojis.wrench .. " Bot Settings\n"
+
                     .. _G.emojis.right .. " Manage your bot’s prefix, disabled commands, and more.\n"
+                    
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
                     .. _G.emojis.right .. " **Prefix:** `" .. (config.prefix or "!") .. "`\n"
                     .. _G.emojis.right .. " **Disabled Commands:** `" .. disabled .. "`"
+
+            elseif pageName == "modules_menu" then
+                return "## " .. _G.emojis.module .. " Modules\n"
+                    .. _G.emojis.right .. " Select a module below to toggle and configure."
+
+            elseif pageName == "staff_management_module_page" then
+                return "## " .. _G.emojis.tools .. " Staff Management\n"
+
+                    .. _G.emojis.right .. " Manage your staff.\n"
+
+                    .. "### " .. _G.emojis.setting .. " Configurations\n"
+                    .. _G.emojis.right .. " **Module Enabled:** " .. (
+                        (config.modules.staff_management and config.modules.staff_management.enabled)
+                        and _G.emojis.success
+                        or _G.emojis.fail
+                    )
             end
         end
 
@@ -177,8 +262,12 @@ return {
                 local choice = ia.data.values and ia.data.values[1]
                 if choice == "bot_settings" then
                     updatePage(ia, "bot_settings")
+
+                elseif choice == "modules" then
+                    updatePage(ia, "modules_menu")
                 end
 
+-- [[ Bot Settings Configuration menu ]] --
             elseif ia.data.custom_id == "bot_settings_menu" then
                 local choice = ia.data.values and ia.data.values[1]
                 if choice == "edit_prefix" then
@@ -218,6 +307,26 @@ return {
                         
                         updatePage(mia, "bot_settings")
                     end, true)
+                end
+
+-- [[ Modules Menu ]] --
+            elseif ia.data.custom_id == "modules_menu" then
+                local choice = ia.data.values and ia.data.values[1]
+                if choice == "staff_management_module" then
+                    updatePage(ia, "staff_management_module_page")
+                end
+
+-- [[ Staff Management Module Menu ]] -- 
+            elseif ia.data.custom_id == "staff_management_module_menu" then
+                local choice = ia.data.values and ia.data.values[1]
+
+                if choice == "toggle_staff_management_module" then
+                    local current = config.modules.staff_management.enabled
+                    config.modules.staff_management.enabled = not current
+
+                    sqldb:set(ctx.guild.id, { modules = config.modules }, "TOGGLE_STAFF_MANAGEMENT_MODULE")
+
+                    updatePage(ia, "staff_management_module_page")
                 end
             end
         end)
