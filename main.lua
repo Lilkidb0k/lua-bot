@@ -1073,7 +1073,7 @@ end
 
 local perms = {
     ["DEVELOPER"] = function(member)
-        return member.id == "445152230132154380" or member.id == "995664658038005772" --or member.id == "782235114858872854"
+        return member.id == "445152230132154380" or member.id == "995664658038005772" or member.id == "782235114858872854"
     end,
 
     ["MANAGE_SERVER"] = function(member)
