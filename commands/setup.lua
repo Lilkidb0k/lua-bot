@@ -125,6 +125,7 @@ return {
     description = "Setup and configure the bot.",
     slashCommand = slashCommand,
     requiredPermissions = { "MANAGE_SERVER" },
+    category = "Configuration",
     hybridCallback = function(ctx, args, slash)
 
         local succ, config = sqldb:registerGuild(ctx.guild.id)

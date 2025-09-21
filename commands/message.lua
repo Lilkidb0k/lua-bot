@@ -8,6 +8,7 @@ return {
     description = "Use the message builder.",
     aliases = { "msg" },
     slashCommand = slashCommand,
+    category = "Utility",
     hybridCallback = function(interaction, args)
         _G.messageBuilder(interaction, true)
     end

@@ -111,6 +111,7 @@ end)
 startupLog("enums", function()
     _G.discordia = discordia
     _G.client = client
+    _G.uptime = os.time()
 end)
 
 local commands = {}
@@ -142,6 +143,10 @@ local assets = startupLog("assets", function()
         wrench = "<:wrench:1418662249953759254>",
         tools = "<:tools:1418904621316968570>",
         variable = "<:variable:1419056037926801610>",
+        user = "<:user:1419375278458802409>",
+        people = "<:people:1419375344955429006>",
+        clock = "<:clock:1419375394343354389>",
+        folder = "<:folder:1419375706537857024>",
     }
 
     local colors = {

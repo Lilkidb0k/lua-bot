@@ -35,6 +35,18 @@ local DEFAULT_CONFIG = {
 }
 
 -- Helper Functions --
+local function isDBConnected()
+  if conn then
+      local result = pcall(function()
+        conn:exec("SELECT 1;")
+      end)
+
+      return result
+  else
+      return false
+  end
+end
+_G.dbConnection = isDBConnected()
 local function encode_table(data)
   local succ, encoded = pcall(function()
     return json.encode(data)

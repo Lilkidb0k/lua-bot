@@ -4,6 +4,7 @@ local sqldb = _G.sqldb
 return {
     name = "prefix",
     description = "View or change the prefix.",
+    category = "Configuration",
     callback = function(message, args)
         local guildId = message.guild.id
 

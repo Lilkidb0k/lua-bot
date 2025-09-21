@@ -18,6 +18,7 @@ return {
     name = "customembed",
     description = "Use embed editor to generate a custom embed",
     slashCommand = slashCommand,
+    category = "Utility",
     hybridCallback = function(interaction, args)
         local builtEmbed = nil
 
