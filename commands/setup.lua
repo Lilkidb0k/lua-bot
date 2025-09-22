@@ -204,12 +204,12 @@ return {
         local currentPage = "config_menu"
         local history = {}
 
-        local function updatePage(ia, newPage)
-            if currentPage and currentPage ~= newPage then
+        local function updatePage(ia, newPage, fromBack)
+            if not fromBack and currentPage and currentPage ~= newPage then
                 table.insert(history, currentPage)
             end
-
             currentPage = newPage
+
             local updated = {
                 embed = {
                     description = getEmbedDescription(newPage),
@@ -230,9 +230,9 @@ return {
         local function goBack(ia)
             local lastPage = table.remove(history)
             if lastPage then
-                updatePage(ia, lastPage)
+                updatePage(ia, lastPage, true)
             else
-                updatePage(ia, "config_menu")
+                updatePage(ia, "main_menu", true)
             end
         end
 
