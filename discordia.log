@@ -1,0 +1,204 @@
+2025-09-21 19:48:38 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:48:38 | [INFO]    | Connecting to Discord...
+2025-09-21 19:48:38 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:48:38 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:48:38 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:48:38 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:48:39 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:49:01 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:49:01 | [INFO]    | Connecting to Discord...
+2025-09-21 19:49:02 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:49:02 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:49:02 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:49:02 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:49:02 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:52:24 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:52:24 | [INFO]    | Connecting to Discord...
+2025-09-21 19:52:24 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:52:24 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:52:24 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:52:24 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:52:24 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:52:34 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:52:34 | [INFO]    | Connecting to Discord...
+2025-09-21 19:52:34 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:52:34 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:52:34 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:52:34 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:52:35 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:53:22 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:53:22 | [INFO]    | Connecting to Discord...
+2025-09-21 19:53:22 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:53:22 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:53:23 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:53:23 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:53:23 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:54:53 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:54:53 | [INFO]    | Connecting to Discord...
+2025-09-21 19:54:53 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:54:53 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:54:53 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:54:53 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:54:54 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:55:16 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:55:16 | [INFO]    | Connecting to Discord...
+2025-09-21 19:55:16 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:55:16 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:55:16 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:55:16 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:55:17 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:55:18 | [ERROR]   | 400 - Bad Request : POST https://discord.com/api/v8/channels/1410649259614802122/messages
+2025-09-21 19:55:37 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:55:37 | [INFO]    | Connecting to Discord...
+2025-09-21 19:55:37 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:55:37 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:55:37 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:55:37 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:55:37 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:55:40 | [ERROR]   | 400 - Bad Request : POST https://discord.com/api/v8/channels/1410649259614802122/messages
+2025-09-21 19:56:47 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:56:47 | [INFO]    | Connecting to Discord...
+2025-09-21 19:56:48 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:56:48 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:56:48 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:56:48 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:56:48 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:56:51 | [ERROR]   | 400 - Bad Request : POST https://discord.com/api/v8/channels/1410649259614802122/messages
+2025-09-21 19:57:44 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:57:44 | [INFO]    | Connecting to Discord...
+2025-09-21 19:57:44 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:57:44 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:57:44 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:57:44 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:57:45 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:57:46 | [ERROR]   | 400 - Bad Request : POST https://discord.com/api/v8/channels/1410649259614802122/messages
+2025-09-21 19:57:59 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:57:59 | [INFO]    | Connecting to Discord...
+2025-09-21 19:57:59 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:57:59 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:57:59 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:57:59 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:58:00 | [INFO]    | Shard 0 : Received READY
+2025-09-21 19:59:04 | [INFO]    | Discordia 2.13.1
+2025-09-21 19:59:04 | [INFO]    | Connecting to Discord...
+2025-09-21 19:59:04 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 19:59:04 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 19:59:04 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 19:59:04 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 19:59:04 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:05:23 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:05:23 | [INFO]    | Connecting to Discord...
+2025-09-21 20:05:24 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:05:24 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:05:24 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:05:24 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:05:25 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:07:05 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:07:05 | [INFO]    | Connecting to Discord...
+2025-09-21 20:07:06 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:07:06 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:07:06 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:07:06 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:07:06 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:10:53 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:10:53 | [INFO]    | Connecting to Discord...
+2025-09-21 20:10:53 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:10:53 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:10:53 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:10:53 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:10:54 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:11:08 | [ERROR]   | 503 - Service Unavailable : POST https://discord.com/api/v8/interactions/1419385469069824133/aW50ZXJhY3Rpb246MTQxOTM4NTQ2OTA2OTgyNDEzMzpGNUxzbEpvZEZpVTJBR2lsVjRIaFMxNU9jWHd4S01lVXhPdU1mejBCc1VNVXZuQWlDUEFtUGFoN1I2bEJHMVUzY0FtbjdYaGpUQ3BGSmRmT25oYWtzVjltMEIyenZld054cHhteVMyWks4VDQwS1FCU0RIZGZubmMwYndwU1h5Vw/callback?with%5Fresponse=true
+2025-09-21 20:11:43 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:11:43 | [INFO]    | Connecting to Discord...
+2025-09-21 20:11:44 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:11:44 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:11:44 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:11:44 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:11:44 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:19:14 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:19:14 | [INFO]    | Connecting to Discord...
+2025-09-21 20:19:14 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:19:14 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:19:14 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:19:14 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:19:15 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:21:26 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:21:26 | [INFO]    | Connecting to Discord...
+2025-09-21 20:21:26 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:21:26 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:21:26 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:21:26 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:21:26 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:21:47 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:21:47 | [INFO]    | Connecting to Discord...
+2025-09-21 20:21:47 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:21:47 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:21:47 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:21:47 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:21:47 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:27:21 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:27:21 | [INFO]    | Connecting to Discord...
+2025-09-21 20:27:21 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:27:21 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:27:22 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:27:22 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:27:22 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:29:17 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:29:17 | [INFO]    | Connecting to Discord...
+2025-09-21 20:29:17 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:29:17 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:29:17 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:29:17 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:29:18 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:30:23 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:30:23 | [INFO]    | Connecting to Discord...
+2025-09-21 20:30:24 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:30:24 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:30:24 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:30:24 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:30:24 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:41:37 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:41:37 | [INFO]    | Connecting to Discord...
+2025-09-21 20:41:37 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:41:37 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:41:37 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:41:37 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:41:37 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:41:58 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:41:58 | [INFO]    | Connecting to Discord...
+2025-09-21 20:41:58 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:41:58 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:41:59 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:41:59 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:41:59 | [INFO]    | Shard 0 : Received READY
+2025-09-21 20:43:43 | [INFO]    | Discordia 2.13.1
+2025-09-21 20:43:43 | [INFO]    | Connecting to Discord...
+2025-09-21 20:43:44 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-21 20:43:44 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-21 20:43:44 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 20:43:44 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 20:43:44 | [INFO]    | Shard 0 : Received READY
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Discord has requested a reconnection
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Disconnected
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Reconnecting...
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Received HELLO
+2025-09-21 22:10:53 | [INFO]    | Shard 0 : Received RESUMED
+2025-09-22 20:01:53 | [INFO]    | Discordia 2.13.1
+2025-09-22 20:01:53 | [INFO]    | Connecting to Discord...
+2025-09-22 20:01:53 | [ERROR]   | 401 - Unauthorized : GET https://discord.com/api/v8/users/@me
+2025-09-22 20:01:53 | [ERROR]   | Could not authenticate, check token: HTTP Error 0 : 401: Unauthorized
+2025-09-22 20:03:33 | [INFO]    | Discordia 2.13.1
+2025-09-22 20:03:33 | [INFO]    | Connecting to Discord...
+2025-09-22 20:03:33 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-22 20:03:34 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-22 20:03:34 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-22 20:03:34 | [INFO]    | Shard 0 : Received HELLO
+2025-09-22 20:03:34 | [INFO]    | Shard 0 : Received READY
+2025-09-22 20:17:24 | [INFO]    | Discordia 2.13.1
+2025-09-22 20:17:24 | [INFO]    | Connecting to Discord...
+2025-09-22 20:17:24 | [INFO]    | Authenticated as RefreshingMemory#8730
+2025-09-22 20:17:24 | [INFO]    | Launching shard 0 (1 out of 1)...
+2025-09-22 20:17:24 | [INFO]    | Shard 0 : Connected to wss://gateway.discord.gg
+2025-09-22 20:17:24 | [INFO]    | Shard 0 : Received HELLO
+2025-09-22 20:17:24 | [INFO]    | Shard 0 : Received READY
