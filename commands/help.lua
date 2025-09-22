@@ -132,9 +132,9 @@ return {
                     if cmd.category and cmd.category:lower() == cat:lower() then
                         local cmdDisplay = ""
                         if cmd.slashCommand then
-                            cmdDisplay = "`/" .. cmd.name .. "`"
+                            cmdDisplay = "**`/" .. cmd.name .. "`**"
                         else
-                            cmdDisplay = "`" .. prefix  .. cmd.name .. "`"
+                            cmdDisplay = "**`" .. prefix  .. cmd.name .. "`**"
                         end
 
                         if cmd.aliases and #cmd.aliases > 0 then
@@ -154,9 +154,9 @@ return {
                     if cmd.module and cmd.module:lower() == mod:lower() then
                         local cmdDisplay = ""
                         if cmd.slashCommand then
-                            cmdDisplay = "`/" .. cmd.name .. "`"
+                            cmdDisplay = "**`/" .. cmd.name .. "`**"
                         else
-                            cmdDisplay = "`" .. prefix .. cmd.name .. "`"
+                            cmdDisplay = "**`" .. prefix .. cmd.name .. "`**"
                         end
 
                         if cmd.aliases and #cmd.aliases > 0 then
