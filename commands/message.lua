@@ -6,7 +6,7 @@ local slashCommand = tools.slashCommand("message", "Use the message builder.")
 return {
     name = "message",
     description = "Use the message builder.",
-    aliases = { "msg" },
+    aliases = { "msg", "embed", "emb" },
     slashCommand = slashCommand,
     category = "Utility",
     hybridCallback = function(interaction, args)

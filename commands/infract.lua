@@ -1,6 +1,6 @@
 return {
     name = "infract",
-    description = "Give an infraction to a user",
+    description = "In development...",
     module = "staff_management",
     category = "Utility",
     callback = function(message, args)
