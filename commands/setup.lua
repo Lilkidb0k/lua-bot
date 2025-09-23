@@ -29,6 +29,11 @@ local configuration_menu = discordia.SelectMenu(
                 emoji = _G.resolvedEmojis.wrench
             },
             {
+                label = "Permissions",
+                value = "role_permissions",
+                emoji = _G.resolvedEmojis.permission
+            },
+            {
                 label = "Modules",
                 value = "modules",
                 emoji = _G.resolvedEmojis.module
@@ -50,6 +55,11 @@ local modules_menu = discordia.SelectMenu(
                 value = "staff_management_module",
                 emoji = _G.resolvedEmojis.tools
             },
+            {
+                label = "Discord Moderation",
+                value = "discord_moderation_module",
+                emoji = _G.resolvedEmojis.moderator
+            }
         }
     }
 )
@@ -77,6 +87,8 @@ local bot_settings_menu = discordia.SelectMenu(
         }
     }
 )
+
+-------------------------------------------------------------------------------------------------------------
 
 local staff_management_module_menu = discordia.SelectMenu(
     {
@@ -120,6 +132,30 @@ local staff_management_module_menu = discordia.SelectMenu(
     }
 )
 
+local discord_moderation_module_menu = discordia.SelectMenu(
+    {
+        id = "discord_moderation_module_menu",
+        placeholder = "Edit Configuration...",
+        min_values = 0,
+        max_values = 1,
+        actionRow = 1,
+        options = {
+            {
+                label = "Toggle Module",
+                value = "toggle_discord_moderation_module",
+                emoji = _G.resolvedEmojis.module
+            },
+            {
+                label = "Edit Moderation Logs Channel",
+                value = "edit_moderation_logs_channel",
+                emoji = _G.resolvedEmojis.channel
+            }
+        }
+    }
+)
+
+-------------------------------------------------------------------------------------------------------------
+
 return {
     name = "setup",
     description = "Setup and configure the bot.",
@@ -162,6 +198,9 @@ return {
 
             elseif pageName == "staff_management_module_page" then
                 return discordia.Components({ staff_management_module_menu, back_button }):raw()
+
+            elseif pageName == "discord_moderation_module_page" then
+                return discordia.Components({ discord_moderation_module_menu, back_button}):raw()
             end
         end
 
@@ -198,6 +237,16 @@ return {
                     .. _G.emojis.right .. " **Module Enabled:** " .. (smConfig.enabled and _G.emojis.success or _G.emojis.fail) .. "\n"
                     .. _G.emojis.right .. " **Infraction Channel:** " .. infractionChannel .. "\n"
                     .. _G.emojis.right .. " **Infraction Embed:** " .. infractionEmbed .. "\n"
+
+            elseif pageName == "discord_moderation_module_page" then
+                local dmConfig = config.modules and config.modules.discord_moderation or {}
+                local modlogsChannel = dmConfig.moderation_logs_channel and client:getChannel(dmConfig.moderation_logs_channel).mentionString or "N/A"
+
+                return "## " .. _G.emojis.moderator .. " Discord Moderation\n"
+                    .. _G.emojis.right .. " Moderate your discord server with ease.\n"
+                    .. "### " .. _G.emojis.setting .. " Configurations\n"
+                    .. _G.emojis.right .. " **Module Enabled:** " .. (dmConfig.enabled and _G.emojis.success or _G.emojis.fail) .. "\n"
+                    .. _G.emojis.right .. " **Moderation Logs Channel:** " .. modlogsChannel .. "\n"
             end
         end
 
@@ -329,6 +378,8 @@ return {
                 local choice = ia.data.values and ia.data.values[1]
                 if choice == "staff_management_module" then
                     updatePage(ia, "staff_management_module_page")
+                elseif choice == "discord_moderation_module" then
+                    updatePage(ia, "discord_moderation_module_page")
                 end
 
 -- [[ Staff Management Module Menu ]] -- 
@@ -336,7 +387,7 @@ return {
                 local choice = ia.data.values and ia.data.values[1]
 
                 if choice == "toggle_staff_management_module" then
-                    local current = config.modules.staff_management.enabled
+                    local current = config.modules.staff_management.enabled or false
                     config.modules.staff_management.enabled = not current
 
                     sqldb:set(ctx.guild.id, { modules = config.modules }, "TOGGLE_STAFF_MANAGEMENT_MODULE_SETUP")
@@ -344,52 +395,22 @@ return {
                     updatePage(ia, "staff_management_module_page")
 
                 elseif choice == "edit_infraction_channel" then
-                    local defaultValues = nil
-                    local defaults = config.modules.staff_management.infraction_channel
-
-                    if defaults then
-                        if type(defaults) == "table" then
-                            defaultValues = {}
-                            for _, defaultId in ipairs(defaults) do
-                                table.insert(defaultValues, { id = defaultId, type = "channel" })
-                            end
-                        else
-                            defaultValues = { { id = defaults, type = "channel" } }
-                        end
-                    else
-                        defaultValues = {}
-                    end
-
-                    local selectMenu = discordia.SelectMenu({
-                        id = "channelselect_" .. _G.junkStr(10),
-                        type = 8,
+                    _G.channelSelect(ia, {
                         placeholder = "Select a channel...",
-                        actionRow = 1,
-                        min_values = 0,
-                        max_values = 1,
-                        default_values = defaultValues
-                    })
+                        min = 0,
+                        max = 1,
+                        defaults = config.modules.staff_management.infraction_channel
+                    }, function(selectedChannels)
+                        local selectedChannelId = selectedChannels[1]
 
-                    local r = ia:reply({
-                        components = discordia.Components():selectMenu(selectMenu):raw(),
-                        ephemeral = true
-                    })
-
-                    onComp(r, nil, nil, ia.user.id, true, function(cia)
-                        local selectedChannelId = cia.data.values and cia.data.values[1]
                         if selectedChannelId then
                             config.modules.staff_management.infraction_channel = selectedChannelId
-                            sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_CHANNEL_SETUP")
-
-                            ia:deleteReply(r.id)
-                            updatePage(ia, "staff_management_module_page")
                         else
                             config.modules.staff_management.infraction_channel = nil
-                            sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_CHANNEL_SETUP")
-
-                            ia:deleteReply(r.id)
-                            updatePage(ia, "staff_management_module_page")
                         end
+
+                        sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_CHANNEL_SETUP")
+                        updatePage(ia, "staff_management_module_page")
                     end)
 
                 elseif choice == "edit_infraction_embed" then
@@ -406,6 +427,38 @@ return {
                         sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_EMBED_SETUP")
                         updatePage(ia, "staff_management_module_page")
                     end, ia)
+                end
+
+-- [[ Discord Moderation ]] --
+            elseif ia.data.custom_id == "discord_moderation_module_menu" then
+                local choice = ia.data.values and ia.data.values[1]
+
+                if choice == "toggle_discord_moderation_module" then
+                    local current = config.modules.discord_moderation.enabled or false
+                    config.modules.discord_moderation.enabled = not current
+
+                    sqldb:set(ctx.guild.id, { modules = config.modules }, "TOGGLE_DISCORD_MODERATION_MODULE_SETUP")
+
+                    updatePage(ia, "discord_moderation_module_page")
+
+                elseif choice == "edit_moderation_logs_channel" then
+                    _G.channelSelect(ia, {
+                        placeholder = "Select a channel...",
+                        min = 0,
+                        max = 1,
+                        defaults = config.modules.discord_moderation.moderation_logs_channel
+                    }, function(selectedChannels)
+                        local selectedChannelId = selectedChannels[1]
+
+                        if selectedChannelId then
+                            config.modules.discord_moderation.moderation_logs_channel = selectedChannelId
+                        else
+                            config.modules.discord_moderation.moderation_logs_channel = nil
+                        end
+
+                        sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_MODERATION_LOGS_CHANNEL_SETUP")
+                        updatePage(ia, "discord_moderation_module_page")
+                    end)
                 end
             end
         end)

@@ -100,10 +100,16 @@ local sqlite3 = startupLog("sqlite3", function()
     return s
 end)
 
-local sqldb = startupLog("sqldb", function()
-    local s = require("sqldb")
-    _G.sqldb = s
-    return s
+startupLog("sqldb", function()
+    local sqldb = require("sqldb")
+    _G.sqldb = sqldb
+    return sqldb
+end)
+
+startupLog("db", function()
+    local db = require("db")
+    _G.db = db
+    return db
 end)
 
 -------------------------------------------------------------------------------------------------------------
@@ -147,6 +153,8 @@ local assets = startupLog("assets", function()
         people = "<:people:1419375344955429006>",
         clock = "<:clock:1419375394343354389>",
         folder = "<:folder:1419375706537857024>",
+        moderator = "<:moderator:1420044085330186280>",
+        permission = "<:permission:1420081304879370330>",
     }
 
     local colors = {
@@ -1186,6 +1194,109 @@ local function canRunCommand(interaction, command)
 end
 
 _G.canRunCommand = canRunCommand
+
+local function loadMembers(guild)
+    local total = guild.totalMemberCount
+    guild:requestMembers()
+
+    local maxTime = 5
+    local loadMembersStartTime = os.time()
+
+    while table.count(guild.members) < total and os.time() - loadMembersStartTime <= maxTime do
+        table.count(guild.members)
+        timer.sleep(100)
+    end
+
+    return true
+end
+
+_G.loadMembers = loadMembers
+
+local function getMemberFromInteraction(interaction, args, slash)
+    local user
+    local member
+
+    if not interaction then
+        return
+    end
+
+    if not args or ((slash and not args.user) and not args[1]) then
+        return
+    end
+
+    if slash and args.user then
+        member = args.user
+        user = member.user
+    elseif tonumber(args[1]) then
+        user = client:getUser(args[1])
+        member = interaction.guild:getMember(args[1])
+    else
+        user = interaction.mentionedUsers and interaction.mentionedUsers.first
+        member = user and interaction.guild:getMember(user.id)
+
+        if (not user) and args[1] and args[1] ~= "" then
+            loadMembers(interaction.guild)
+                
+            for _, v in pairs(interaction.guild.members) do
+                if v.name:lower():find(args[1]:lower()) or v.user.username:lower():find(args[1]:lower()) or v.id == tostring(args[1]) then
+                    user = v.user
+                    member = v
+                end
+            end
+        end
+    end
+
+    return member, user
+end
+
+_G.getMemberFromInteraction = getMemberFromInteraction
+
+local function channelSelect(ia, opts, callback)
+    -- opts:
+    -- {
+    --   placeholder = "Select a channel...",
+    --   min = 0,  -- min selected channels
+    --   max = 1,  -- max selected channels
+    --   defaults = { "123", "456" } -- optional preselected channel IDs
+    -- }
+
+    local defaultValues = {}
+    if opts.defaults then
+        if type(opts.defaults) == "table" then
+            for _, id in ipairs(opts.defaults) do
+                table.insert(defaultValues, { id = id, type = "channel" })
+            end
+        else
+            defaultValues = { { id = opts.defaults, type = "channel" } }
+        end
+    end
+
+    local selectMenu = discordia.SelectMenu({
+        id = "channelselect_" .. _G.junkStr(10),
+        type = 8,
+        placeholder = opts.placeholder or "Select a channel...",
+        actionRow = 1,
+        min_values = opts.min or 0,
+        max_values = opts.max or 1,
+        default_values = defaultValues
+    })
+
+    local reply = ia:reply({
+        components = discordia.Components():selectMenu(selectMenu):raw(),
+        ephemeral = true
+    })
+
+    onComp(reply, nil, nil, ia.user.id, true, function(cia)
+        local selected = cia.data.values or {}
+        ia:deleteReply(reply.id)
+
+        if callback then
+            callback(selected, cia)
+        end
+    end)
+end
+
+_G.channelSelect = channelSelect
 
 print(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
 
