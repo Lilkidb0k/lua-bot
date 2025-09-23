@@ -42,28 +42,6 @@ local configuration_menu = discordia.SelectMenu(
     }
 )
 
-local modules_menu = discordia.SelectMenu(
-    {
-        id = "modules_menu",
-        placeholder = "Select a module...",
-        min_values = 0,
-        max_values = 1,
-        actionRow = 1,
-        options = {
-            {
-                label = "Staff Management",
-                value = "staff_management_module",
-                emoji = _G.resolvedEmojis.tools
-            },
-            {
-                label = "Discord Moderation",
-                value = "discord_moderation_module",
-                emoji = _G.resolvedEmojis.moderator
-            }
-        }
-    }
-)
-
 -------------------------------------------------------------------------------------------------------------
 
 local bot_settings_menu = discordia.SelectMenu(
@@ -83,6 +61,50 @@ local bot_settings_menu = discordia.SelectMenu(
                 label = "Edit Disabled Commands",
                 value = "edit_disabled_commands",
                 emoji = _G.resolvedEmojis.edit
+            }
+        }
+    }
+)
+
+local permissions_menu = discordia.SelectMenu(
+    {
+        id = "permissions_menu",
+        placeholder = "Select a permission...",
+        min_values = 1,
+        max_values = 1,
+        actionRow = 1,
+        options = {
+            {
+                label = "Edit Discord Moderator Roles",
+                value = "edit_discord_mod_roles",
+                emoji = _G.resolvedEmojis.moderator
+            },
+            {
+                label = "Edit Discord Administrator Roles",
+                value = "edit_discord_admin_roles",
+                emoji = _G.resolvedEmojis.tools
+            }
+        }
+    }
+)
+
+local modules_menu = discordia.SelectMenu(
+    {
+        id = "modules_menu",
+        placeholder = "Select a module...",
+        min_values = 0,
+        max_values = 1,
+        actionRow = 1,
+        options = {
+            {
+                label = "Staff Management",
+                value = "staff_management_module",
+                emoji = _G.resolvedEmojis.tools
+            },
+            {
+                label = "Discord Moderation",
+                value = "discord_moderation_module",
+                emoji = _G.resolvedEmojis.moderator
             }
         }
     }
@@ -193,6 +215,9 @@ return {
             elseif pageName == "bot_settings" then
                 return discordia.Components({ bot_settings_menu, back_button }):raw()
 
+            elseif pageName == "permissions_page" then
+                return discordia.Components({ permissions_menu, back_button}):raw()
+
             elseif pageName == "modules_menu" then
                 return discordia.Components({ modules_menu, back_button }):raw()
 
@@ -221,6 +246,38 @@ return {
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
                     .. _G.emojis.right .. " **Prefix:** `" .. (config.prefix or "!") .. "`\n"
                     .. _G.emojis.right .. " **Disabled Commands:** `" .. disabled .. "`"
+
+            elseif pageName == "permissions_page" then
+                local NBSP = "\194\160"
+                local indent = string.rep(NBSP, 2)
+
+                local modRolesText = indent .. _G.emojis.right .. " None"
+                if config.discord_mod_roles and #config.discord_mod_roles > 0 then
+                    local lines = {}
+                    for _, roleId in ipairs(config.discord_mod_roles) do
+                        table.insert(lines, indent .. _G.emojis.right .. " <@&" .. roleId .. ">")
+                    end
+                    modRolesText = table.concat(lines, "\n")
+                end
+
+                local adminRolesText = indent .. _G.emojis.right .. " None"
+                if config.discord_admin_roles and #config.discord_admin_roles > 0 then
+                    local lines = {}
+                    for _, roleId in ipairs(config.discord_admin_roles) do
+                        table.insert(lines, indent .. _G.emojis.right .. " <@&" .. roleId .. ">")
+                    end
+                    adminRolesText = table.concat(lines, "\n")
+                end
+
+                return "## " .. _G.emojis.permission .. " Bot Settings\n"
+                    .. _G.emojis.right .. " Configure and restrict various features to specific roles.\n\n"
+                    .. "### " .. _G.emojis.setting .. " Configurations\n"
+
+                    .. _G.emojis.right .. " **Discord Moderator Roles:**\n"
+                    .. modRolesText .. "\n\n"
+
+                    .. _G.emojis.right .. " **Discord Administrator Roles:**\n"
+                    .. adminRolesText .. "\n\n"
 
             elseif pageName == "modules_menu" then
                 return "## " .. _G.emojis.module .. " Modules\n"
@@ -320,6 +377,9 @@ return {
 
                 elseif choice == "modules" then
                     updatePage(ia, "modules_menu")
+
+                elseif choice == "role_permissions" then
+                    updatePage(ia, "permissions_page")
                 end
 
 -- [[ Bot Settings Configuration menu ]] --
@@ -371,6 +431,25 @@ return {
                         
                         updatePage(mia, "bot_settings")
                     end, true)
+                end
+
+-- [[ Permissions Menu ]] --
+            elseif ia.data.custom_id == "permissions_menu" then
+                local choice = ia.data.values and ia.data.values[1]
+
+                if choice == "edit_discord_mod_roles" then
+                _G.roleSelect(ia, {
+                        placeholder = "Select one or more mod roles...",
+                        min = 0,
+                        max = 5,
+                        defaults = config.discord_mod_roles
+                    }, function(selected, cia)
+
+                        config.discord_mod_roles = selected
+                        sqldb:set(ia.guild.id, { discord_mod_roles = config.discord_mod_roles }, "EDIT_DISCORD_MOD_ROLES_SETUP")
+
+                        updatePage(ia, "permissions_page")
+                    end)
                 end
 
 -- [[ Modules Menu ]] --

@@ -1252,14 +1252,6 @@ end
 _G.getMemberFromInteraction = getMemberFromInteraction
 
 local function channelSelect(ia, opts, callback)
-    -- opts:
-    -- {
-    --   placeholder = "Select a channel...",
-    --   min = 0,  -- min selected channels
-    --   max = 1,  -- max selected channels
-    --   defaults = { "123", "456" } -- optional preselected channel IDs
-    -- }
-
     local defaultValues = {}
     if opts.defaults then
         if type(opts.defaults) == "table" then
@@ -1297,6 +1289,45 @@ local function channelSelect(ia, opts, callback)
 end
 
 _G.channelSelect = channelSelect
+
+local function roleSelect(ia, opts, callback)
+    local defaultValues = {}
+   if opts.defaults then
+        if type(opts.defaults) == "table" then
+            for _, id in ipairs(opts.defaults) do
+                table.insert(defaultValues, { id = id, type = "role" })
+            end
+        else
+            defaultValues = { { id = opts.defaults, type = "role" } }
+        end
+    end
+
+    local selectMenu = discordia.SelectMenu({
+        id = "roleselect_" .. _G.junkStr(10),
+        type = 6,
+        placeholder = opts.placeholder or "Select a role...",
+        actionRow = 1,
+        min_values = opts.min or 0,
+        max_values = opts.max or 1,
+        default_values = defaultValues
+    })
+
+    local reply = ia:reply({
+        components = discordia.Components():selectMenu(selectMenu):raw(),
+        ephemeral = true
+    })
+
+    onComp(reply, nil, nil, ia.user.id, true, function(cia)
+        local selected = cia.data.values or {}
+        ia:deleteReply(reply.id)
+
+        if callback then
+            callback(selected, cia)
+        end
+    end)
+end
+
+_G.roleSelect = roleSelect
 
 print(cc.green .. "[STARTUP]" .. cc.reset .. " - Initialized main functions in " .. (os.clock() - startTime) .. " seconds.\n")
 
