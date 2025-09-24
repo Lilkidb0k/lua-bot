@@ -14,6 +14,7 @@ return {
     slashCommand = slashCommand,
     module = "discord_moderation",
     category = "Moderation",
+    requiredPermissions = { "DISCORD_MOD" },
     hybridCallback = function(interaction, args, slash)
         local member = getMemberFromInteraction(interaction, args, slash)
 
@@ -25,6 +26,15 @@ return {
                 },
                 ephemeral = true
             })
+        end
+
+        if _G.hasPerms(member, "DISCORD_MOD") == true then
+            return interaction:reply({
+                embed = {
+                    description = _G.emojis.fail .. " You cannot moderate other moderators/administrators.",
+                    color = _G.colors.fail
+                },
+            }, true)
         end
 
         local reason = (slash and args and args.reason) or ((not slash) and table.remove(args, 1) and table.concat(args, " ") ~= "" and table.concat(args, " "))

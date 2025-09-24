@@ -453,6 +453,124 @@ end
 
 _G.prompt = prompt
 
+local function jsonCompatible(tbl, blacklist)
+    tbl = table.deepcopy(tbl)
+    
+    for k, v in pairs(tbl) do
+        if table.find(blacklist or {}, tostring(k)) then
+            tbl[k] = nil
+        end
+    end
+
+    table.deeppairs(tbl, function(t, k, v)
+        if table.find(blacklist or {}, tostring(k)) then
+            return nil
+        elseif type(v) == "function" then
+            return tostring(v)
+        else
+            return v
+        end
+    end)
+    return tbl
+end
+
+_G.jsonCompatible = jsonCompatible
+
+local function paginate(interaction, pages, user, options)
+    options = options or {}
+    local pageIndex = options.startPage or 1
+    local showTotalPages = options.showTotalPages
+    local msg
+
+    local function buildComponents()
+        local currentPage = pages[pageIndex]
+        local comps = discordia.Components()
+        comps:button({ id = "previous", emoji = resolvedEmojis.left, style = "secondary" })
+
+        local teleportLabel
+        if currentPage.title then
+            teleportLabel = currentPage.title
+            if showTotalPages then
+                teleportLabel = teleportLabel .. " (" .. pageIndex .. "/" .. #pages .. ")"
+            end
+        else
+            teleportLabel = showTotalPages and ("Page " .. pageIndex .. "/" .. #pages) or ("Page " .. pageIndex)
+        end
+
+        comps:button({
+            id = "teleporter",
+            label = teleportLabel,
+            emoji = currentPage.emoji,
+            style = "secondary"
+        })
+
+        comps:button({ id = "next", emoji = resolvedEmojis.right, style = "secondary" })
+        return comps:raw()
+    end
+
+    msg = interaction:reply({
+        embed = pages[pageIndex],
+        components = buildComponents()
+    }, false)
+
+    local function update()
+        local currentPage = pages[pageIndex]
+        local success, err = msg:update({
+            embed = currentPage,
+            components = buildComponents()
+        })
+        if not success then
+            print("Failed to update pagination:", err)
+        end
+    end
+
+    onComp(msg, nil, nil, user.id, false, function(ia)
+        local id = ia.data.custom_id
+        if id == "previous" then
+            pageIndex = pageIndex - 1
+            if pageIndex < 1 then pageIndex = #pages end
+            ia:updateDeferred(true)
+            update()
+
+        elseif id == "next" then
+            pageIndex = pageIndex + 1
+            if pageIndex > #pages then pageIndex = 1 end
+            ia:updateDeferred(true)
+            update()
+
+        elseif id == "teleporter" then
+            local optionsList = {}
+            for i, page in ipairs(pages) do
+                table.insert(optionsList, {
+                    label = page.title or ("Page " .. i),
+                    value = tostring(i),
+                    emoji = page.emoji
+                })
+            end
+
+            local menu = ia:reply({
+                components = discordia.Components():selectMenu({
+                    id = "pageselect",
+                    placeholder = "Select a page...",
+                    options = optionsList
+                }):raw()
+            }, true)
+
+            onComp(menu, nil, nil, ia.user.id, false, function(tia)
+                local first = tia.data.values and tia.data.values[1]
+                if first then
+                    pageIndex = tonumber(first)
+                    tia:updateDeferred(true)
+                    ia:deleteReply(menu.id)
+                    update()
+                end
+            end)
+        end
+    end)
+end
+
+_G.paginate = paginate
+
 -------------------------------------------------------------------------------------------------------------
 
 local function embedBuilder(triggerMessage, initialState, callback, triggerInteraction, variableList)
@@ -1099,7 +1217,39 @@ local perms = {
         else
             return "NOT_SETUP"
         end
-    end
+    end,
+
+	["DISCORD_MOD"] = function(member, config)
+		if member:hasPermission("manageGuild") then
+			return true
+		end
+
+		config = config or sqldb:get(member.guild.id)
+
+		if config then
+			if config.discord_admin_roles then
+				for _, adminrole in pairs(config.discord_admin_roles) do
+					if member:hasRole(adminrole) then
+						return true
+					end
+				end
+			end
+
+			if config.discord_mod_roles then
+				for _, modrole in pairs(config.discord_mod_roles) do
+					if member:hasRole(modrole) then
+						return true
+					end
+				end
+			else
+				return "You have not configured the **Discord Moderator** permission."
+			end
+		else
+			return "This server is not configured."
+		end
+
+		return "You are missing the **Discord Moderator** permission."
+	end,
 }
 
 local function hasPerms(member, perm)
@@ -1168,6 +1318,8 @@ local function parsePerms(interaction, command, member)
 
     return true
 end
+
+-------------------------------------------------------------------------------------------------------------
 
 local function isModuleEnabled(guildId, moduleName)
     local config = sqldb:get(guildId) or {}
@@ -1287,6 +1439,8 @@ local function channelSelect(ia, opts, callback)
         end
     end)
 end
+
+-------------------------------------------------------------------------------------------------------------
 
 _G.channelSelect = channelSelect
 
