@@ -453,29 +453,6 @@ end
 
 _G.prompt = prompt
 
-local function jsonCompatible(tbl, blacklist)
-    tbl = table.deepcopy(tbl)
-    
-    for k, v in pairs(tbl) do
-        if table.find(blacklist or {}, tostring(k)) then
-            tbl[k] = nil
-        end
-    end
-
-    table.deeppairs(tbl, function(t, k, v)
-        if table.find(blacklist or {}, tostring(k)) then
-            return nil
-        elseif type(v) == "function" then
-            return tostring(v)
-        else
-            return v
-        end
-    end)
-    return tbl
-end
-
-_G.jsonCompatible = jsonCompatible
-
 local function paginate(interaction, pages, user, options)
     options = options or {}
     local pageIndex = options.startPage or 1
