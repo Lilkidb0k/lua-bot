@@ -34,7 +34,8 @@ return {
                     description = _G.emojis.fail .. " You cannot moderate other moderators/administrators.",
                     color = _G.colors.fail
                 },
-            }, true)
+                ephemeral = true
+            })
         end
 
         local reason = (slash and args and args.reason) or ((not slash) and table.remove(args, 1) and table.concat(args, " ") ~= "" and table.concat(args, " "))

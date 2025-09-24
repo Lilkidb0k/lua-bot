@@ -1196,14 +1196,18 @@ local perms = {
         end
     end,
 
-	["DISCORD_MOD"] = function(member, config)
-		if member:hasPermission("manageGuild") then
-			return true
-		end
+    ["DISCORD_MOD"] = function(member, config)
+        config = config or sqldb:get(member.guild.id)
 
-		config = config or sqldb:get(member.guild.id)
+        if member:hasPermission("manageGuild") then
+            return true
+        end
 
-		if config then
+        if not config then
+            return false
+        end
+
+        if config then
 			if config.discord_admin_roles then
 				for _, adminrole in pairs(config.discord_admin_roles) do
 					if member:hasRole(adminrole) then
@@ -1222,20 +1226,30 @@ local perms = {
 				return "You have not configured the **Discord Moderator** permission."
 			end
 		else
-			return "This server is not configured."
+			return "You have not configured this server."
 		end
 
 		return "You are missing the **Discord Moderator** permission."
-	end,
+    end,
 }
 
-local function hasPerms(member, perm)
-    local permFunction = perms[perm]
-    if permFunction then
-        return true
-    else
-        return false
-    end
+local function hasPerms(member, perm, config, interaction, message)
+	local has = perms[perm]
+	if has then
+        local result = has(member, config)
+        if result == true then
+            return true
+        else
+            if interaction and message ~= false then
+                --interaction:fail(message or result, nil, true)
+            end
+
+            return false
+        end
+	else
+		client:error("Failed to find permission: " .. tostring(perm))
+		return false
+	end
 end
 
 _G.hasPerms = hasPerms
@@ -1325,14 +1339,18 @@ end
 _G.canRunCommand = canRunCommand
 
 local function loadMembers(guild)
-    local total = guild.totalMemberCount
+    local total = guild.totalMemberCount or 0
+
+    if table.count(guild.members) == total then
+        return true
+    end
+
     guild:requestMembers()
 
     local maxTime = 5
-    local loadMembersStartTime = os.time()
+    local startTime = os.time()
 
-    while table.count(guild.members) < total and os.time() - loadMembersStartTime <= maxTime do
-        table.count(guild.members)
+    while table.count(guild.members) < total and os.time() - startTime <= maxTime do
         timer.sleep(100)
     end
 
@@ -1341,21 +1359,18 @@ end
 
 _G.loadMembers = loadMembers
 
-local function getMemberFromInteraction(interaction, args, slash)
+local function getMemberFromInteraction(interaction, args, slash, userArgName)
+    userArgName = userArgName or "user"
     local user
     local member
 
-    if not interaction then
-        return
-    end
+    if not interaction then return end
 
-    if not args or ((slash and not args.user) and not args[1]) then
-        return
-    end
+    if not args or ((slash and not args[userArgName]) and not args[1]) then return end
 
-    if slash and args.user then
-        member = args.user
-        user = member.user
+    if slash and args[userArgName] then
+        user = args[userArgName]
+        member = user and interaction.guild:getMember(user.id)
     elseif tonumber(args[1]) then
         user = client:getUser(args[1])
         member = interaction.guild:getMember(args[1])
@@ -1365,7 +1380,7 @@ local function getMemberFromInteraction(interaction, args, slash)
 
         if (not user) and args[1] and args[1] ~= "" then
             loadMembers(interaction.guild)
-                
+
             for _, v in pairs(interaction.guild.members) do
                 if v.name:lower():find(args[1]:lower()) or v.user.username:lower():find(args[1]:lower()) or v.id == tostring(args[1]) then
                     user = v.user
