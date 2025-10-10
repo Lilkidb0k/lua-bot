@@ -438,8 +438,8 @@ return {
                 local choice = ia.data.values and ia.data.values[1]
 
                 if choice == "edit_discord_mod_roles" then
-                _G.roleSelect(ia, {
-                        placeholder = "Select one or more mod roles...",
+                    _G.roleSelect(ia, {
+                        placeholder = "Select one or more moderator roles...",
                         min = 0,
                         max = 5,
                         defaults = config.discord_mod_roles
@@ -447,6 +447,20 @@ return {
 
                         config.discord_mod_roles = selected
                         sqldb:set(ia.guild.id, { discord_mod_roles = config.discord_mod_roles }, "EDIT_DISCORD_MOD_ROLES_SETUP")
+
+                        updatePage(ia, "permissions_page")
+                    end)
+
+                elseif choice == "edit_discord_admin_roles" then
+                    _G.roleSelect(ia, {
+                        placeholder = "Select one or more administrator roles...",
+                        min = 0,
+                        max = 5,
+                        defaults = config.discord_admin_roles
+                    }, function(selected, cia)
+
+                        config.discord_admin_roles = selected
+                        sqldb:set(ia.guild.id, { discord_admin_roles = config.discord_admin_roles }, "EDIT_DISCORD_ADMIN_ROLES_SETUP")
 
                         updatePage(ia, "permissions_page")
                     end)

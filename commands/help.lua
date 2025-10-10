@@ -52,6 +52,9 @@ return {
         local seenModules, seenCategories = {}, {}
         local moduleOptions, categoryOptions = {}, {}
 
+        local NBSP = "\194\160"
+        local indent = string.rep(NBSP, 3)
+
         for _, cmd in pairs(_G.commands) do
             if cmd.module then
                 local mod = cmd.module:lower()
@@ -115,60 +118,94 @@ return {
 
         local function getEmbedDescription(page)
             local prefix = _G.sqldb:get(ctx.guild.id).prefix
+            local seenNames = {}
 
             if page == "main_menu" then
                 return "## " .. _G.emojis.setting .. " Command List\n"
                     .. _G.emojis.right .. " Please select an option below."
+
             elseif page == "category_option" then
                 return "## " .. _G.emojis.folder .. " Categories\n"
                     .. _G.emojis.right .. " Choose a category to view commands."
+
             elseif page == "module_option" then
                 return "## " .. _G.emojis.module .. " Modules\n"
                     .. _G.emojis.right .. " Choose a module to view commands."
+
             elseif page:match("^category_") then
                 local cat = page:gsub("^category_", "")
                 local lines = { "## " .. _G.emojis.folder .. " " .. toTitleCase(cat) .. " Commands" }
+
                 for _, cmd in pairs(_G.commands) do
-                    if cmd.category and cmd.category:lower() == cat:lower() then
-                        local cmdDisplay = ""
-                        if cmd.slashCommand then
-                            cmdDisplay = "**`/" .. cmd.name .. "`**"
-                        else
-                            cmdDisplay = "**`" .. prefix  .. cmd.name .. "`**"
-                        end
+                    if cmd.category and cmd.category:lower() == cat:lower() and not seenNames[cmd.name] then
+                        seenNames[cmd.name] = true
+
+                        local cmdDisplay = cmd.slashCommand and
+                            ("**`/" .. cmd.name .. "`**") or
+                            ("**`" .. prefix .. cmd.name .. "`**")
 
                         if cmd.aliases and #cmd.aliases > 0 then
                             local aliasStr = {}
-                            for _, a in ipairs(cmd.aliases) do table.insert(aliasStr, "`" .. prefix .. a .. "`") end
+                            for _, a in ipairs(cmd.aliases) do
+                                table.insert(aliasStr, "`" .. prefix .. a .. "`")
+                            end
                             cmdDisplay = cmdDisplay .. " (" .. table.concat(aliasStr, ", ") .. ")"
                         end
 
-                        table.insert(lines, "> " .. _G.emojis.right .. " " .. cmdDisplay .. " - " .. (cmd.description or "No description"))
+                        local description = cmd.description or "No description"
+
+                        if cmd.requiredPermissions and #cmd.requiredPermissions > 0 then
+                            local perms = {}
+                            for _, p in ipairs(cmd.requiredPermissions) do
+                                table.insert(perms, "`" .. p .. "`")
+                            end
+                            description = description
+                                .. "\n" .. indent .. _G.emojis.right .. " **Permissions:** "
+                                .. table.concat(perms, ", ")
+                        end
+
+                        table.insert(lines, _G.emojis.right .. " " .. cmdDisplay .. " - " .. description)
                     end
                 end
                 return table.concat(lines, "\n")
+
             elseif page:match("^module_") then
                 local mod = page:gsub("^module_", "")
                 local lines = { "## " .. _G.emojis.module .. " " .. toTitleCase(mod) .. " Commands" }
+
                 for _, cmd in pairs(_G.commands) do
-                    if cmd.module and cmd.module:lower() == mod:lower() then
-                        local cmdDisplay = ""
-                        if cmd.slashCommand then
-                            cmdDisplay = "**`/" .. cmd.name .. "`**"
-                        else
-                            cmdDisplay = "**`" .. prefix .. cmd.name .. "`**"
-                        end
+                    if cmd.module and cmd.module:lower() == mod:lower() and not seenNames[cmd.name] then
+                        seenNames[cmd.name] = true
+
+                        local cmdDisplay = cmd.slashCommand and
+                            ("**`/" .. cmd.name .. "`**") or
+                            ("**`" .. prefix .. cmd.name .. "`**")
 
                         if cmd.aliases and #cmd.aliases > 0 then
                             local aliasStr = {}
-                            for _, a in ipairs(cmd.aliases) do table.insert(aliasStr, "`" .. prefix .. a .. "`") end
+                            for _, a in ipairs(cmd.aliases) do
+                                table.insert(aliasStr, "`" .. prefix .. a .. "`")
+                            end
                             cmdDisplay = cmdDisplay .. " (" .. table.concat(aliasStr, ", ") .. ")"
                         end
 
-                        table.insert(lines, "> " .. _G.emojis.right .. " " .. cmdDisplay .. " - " .. (cmd.description or "No description"))
+                        local description = cmd.description or "No description"
+
+                        if cmd.requiredPermissions and #cmd.requiredPermissions > 0 then
+                            local perms = {}
+                            for _, p in ipairs(cmd.requiredPermissions) do
+                                table.insert(perms, "`" .. p .. "`")
+                            end
+                            description = description
+                                .. "\n" .. indent .. _G.emojis.right .. " **Permissions:** "
+                                .. table.concat(perms, ", ")
+                        end
+
+                        table.insert(lines, _G.emojis.right .. " " .. cmdDisplay .. " - " .. description)
                     end
                 end
                 return table.concat(lines, "\n")
+
             else
                 return "*Unknown page.*"
             end
