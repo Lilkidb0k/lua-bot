@@ -100,6 +100,12 @@ local sqlite3 = startupLog("sqlite3", function()
     return s
 end)
 
+local http = startupLog("coro-http", function()
+    local http = require("coro-http")
+    _G.http = http
+    return http
+end)
+
 startupLog("sqldb", function()
     local sqldb = require("sqldb")
     _G.sqldb = sqldb
@@ -121,6 +127,7 @@ startupLog("enums", function()
 end)
 
 local commands = {}
+local modules = {}
 -------------------------------------------------------------------------------------------------------------
 
 local assets = startupLog("assets", function()
@@ -262,7 +269,7 @@ print(cc.green .. "[STARTUP]" .. cc.reset .. "- Initialized helper functions in 
 print(cc.cyan .. "[STARTUP]" .. cc.reset .. " - Initializing main functions...")
 startTime = os.clock()
 
-local function loadCommands(loadSlash, slashToLoad)
+local function loadCommands(loadSlash, slashToLoad, loadModules)
 
     local c = 0
     local cmdFolder = fs.readdirSync("./commands")
@@ -343,7 +350,60 @@ local function loadCommands(loadSlash, slashToLoad)
         end
     end
 
-    return c, errors
+    local modulesLoaded = 0
+    local moduleErrors = {}
+    if loadModules then
+        print(cc.cyan .. "\n[MOD]" .. cc.reset .. " - Loading modules...")
+
+        local modFolder = fs.readdirSync("./modules")
+
+        for i, moduleFileName in pairs(modFolder) do
+            print(cc.cyan .. "[MOD]" .. cc.reset .. " - Loading " .. moduleFileName)
+            local fileStr, err = load(fs.readFileSync("modules/" .. moduleFileName))
+
+            if err then
+                print(cc.yellow .. "[MOD]" .. cc.reset .. " - Syntax error in " .. moduleFileName .. " | " .. err)
+                table.insert(moduleErrors, { fileName = moduleFileName, errorType = "Syntax", errorMessage = err })
+            else
+                local mod
+                local success, runtimeErr = pcall(function()
+                    mod = fileStr()
+                end)
+
+                if not success or runtimeErr then
+                    print(cc.red .. "[MOD]" .. cc.reset .. " - Runtime error in " .. moduleFileName .. " | " .. tostring(runtimeErr))
+                    table.insert(moduleErrors, { fileName = moduleFileName, errorType = "Runtime", errorMessage = runtimeErr })
+                else
+                    modules[mod.name:lower()] = mod
+
+                    -- Auto-start if possible
+                    if mod.Start then
+                        local ok, startErr = pcall(mod.Start)
+                        if not ok then
+                            print(cc.red .. "[MOD]" .. cc.reset .. " - Failed to start " .. mod.name .. " | " .. tostring(startErr))
+                            table.insert(moduleErrors, { fileName = moduleFileName, errorType = "Startup", errorMessage = startErr })
+                        else
+                            print(cc.green .. "[MOD]" .. cc.reset .. " - Started module " .. mod.name)
+                        end
+                    else
+                        print(cc.magenta .. "[MOD]" .. cc.reset .. " - " .. mod.name .. " has no Start()")
+                    end
+
+                    modulesLoaded = modulesLoaded + 1
+                end
+            end
+        end
+
+        _G.modules = modules
+    end
+
+    print(cc.cyan .. "\n[SUMMARY]" .. cc.reset ..
+        "\nLoaded Commands: " .. c ..
+        "\nLoaded Modules: " .. modulesLoaded ..
+        "\nCommand Errors: " .. #errors ..
+        "\nModule Errors: " .. #moduleErrors)
+
+    return c, errors, modulesLoaded, moduleErrors
 end
 
 -------------------------------------------------------------------------------------------------------------
@@ -1483,7 +1543,7 @@ print(cc.cyan .. "[STARTUP]" .. cc.reset .. " - Initializing events...")
 startTime = os.clock()
 
 client:on("ready", function()
-    loadCommands(false, nil)
+    loadCommands(false, nil, true)
 
     print(cc.yellow .. "\n[STARTUP]" .. cc.reset .. " - Initialized application in " .. (os.clock() - totalStartTime) .. " seconds.\n")
 end)
