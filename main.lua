@@ -12,6 +12,7 @@ local cc = {
     cyan = "\27[36m",
     white = "\27[37m",
 }
+_G.cc = cc
 
 local function startupLog(name, func, color)
     color = color or cc.cyan
@@ -353,9 +354,9 @@ local function loadCommands(loadSlash, slashToLoad, loadModules)
     local modulesLoaded = 0
     local moduleErrors = {}
     if loadModules then
-        print(cc.cyan .. "\n[MOD]" .. cc.reset .. " - Loading modules...")
-
         local modFolder = fs.readdirSync("./modules")
+
+        print("")
 
         for i, moduleFileName in pairs(modFolder) do
             print(cc.cyan .. "[MOD]" .. cc.reset .. " - Loading " .. moduleFileName)
@@ -376,15 +377,16 @@ local function loadCommands(loadSlash, slashToLoad, loadModules)
                 else
                     modules[mod.name:lower()] = mod
 
-                    -- Auto-start if possible
-                    if mod.Start then
+                    if mod.Start and mod.enabled ~= false then
                         local ok, startErr = pcall(mod.Start)
                         if not ok then
                             print(cc.red .. "[MOD]" .. cc.reset .. " - Failed to start " .. mod.name .. " | " .. tostring(startErr))
                             table.insert(moduleErrors, { fileName = moduleFileName, errorType = "Startup", errorMessage = startErr })
                         else
-                            print(cc.green .. "[MOD]" .. cc.reset .. " - Started module " .. mod.name)
+                            print(cc.green .. "[MOD]" .. cc.reset .. " - Started module " .. mod.name .. " | " .. i .. "/" .. table.count(modules))
                         end
+                    elseif mod.enabled == false then
+                        print(cc.red .. "[MOD]" .. cc.reset .. " - " .. moduleFileName .. " is disabled" .. " | " .. i .. "/" .. table.count(modules))
                     else
                         print(cc.magenta .. "[MOD]" .. cc.reset .. " - " .. mod.name .. " has no Start()")
                     end
@@ -398,8 +400,8 @@ local function loadCommands(loadSlash, slashToLoad, loadModules)
     end
 
     print(cc.cyan .. "\n[SUMMARY]" .. cc.reset ..
-        "\nLoaded Commands: " .. c ..
-        "\nLoaded Modules: " .. modulesLoaded ..
+        "\nLoaded Commands: " .. c .. "/" .. #cmdFolder ..
+        "\nLoaded Modules: " .. modulesLoaded .. "/" .. table.count(modules) ..
         "\nCommand Errors: " .. #errors ..
         "\nModule Errors: " .. #moduleErrors)
 
@@ -531,7 +533,7 @@ local function paginate(interaction, pages, user, options)
                 teleportLabel = teleportLabel .. " (" .. pageIndex .. "/" .. #pages .. ")"
             end
         else
-            teleportLabel = showTotalPages and ("Page " .. pageIndex .. "/" .. #pages) or ("Page " .. pageIndex)
+            teleportLabel = showTotalPages and (pageIndex .. "/" .. #pages) or (pageIndex)
         end
 
         comps:button({

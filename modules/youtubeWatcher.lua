@@ -1,6 +1,7 @@
 local youtubeWatcher = {
     name = "YouTubeWatcher",
-    description = "Watches a YouTube channel for new uploads and announces them in Discord."
+    description = "Watches a YouTube channel for new uploads and announces them in Discord.",
+    enabled = false
 }
 
 local Clock = discordia.Clock()
@@ -27,14 +28,12 @@ end
 local function checkYouTube()
     local playlistId = getUploadsPlaylistId()
     if not playlistId then
-        print("[YouTubeWatcher] Failed to get uploads playlist.")
         return
     end
 
     local url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" .. playlistId .. "&maxResults=1&key=" .. API_KEY
     local res, body = http.request("GET", url)
     if res.code ~= 200 then
-        print("[YouTubeWatcher] Failed to fetch latest video.")
         return
     end
 
@@ -50,7 +49,6 @@ local function checkYouTube()
         local channel = client:getChannel(DISCORD_CHANNEL_ID)
         if channel then
             channel:send("**New Video Uploaded!**\n**" .. title .. "**\n" .. videoUrl)
-            print("[YouTubeWatcher] Announced new video:", title)
         end
     end
 end

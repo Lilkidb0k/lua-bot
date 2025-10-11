@@ -12,7 +12,7 @@ return {
     slashCommand = slashCommand,
     aliases = { "cases", "ml" },
     hybridCallback = function(interaction, args, slash)
-        local member, user = _G.getMemberFromInteraction(interaction, args, slash)
+        local member = _G.getMemberFromInteraction(interaction, args, slash) or interaction.member
 		local config = sqldb:get(interaction.guild.id) or {}
 		local allCases = table.values(config.cases or {})
 
@@ -73,6 +73,6 @@ return {
             })
         end
 
-        _G.paginate(interaction, pages, user, { showTotalPages = true, startPage = 1 })
+        _G.paginate(interaction, pages, member, { showTotalPages = true, startPage = 1 })
     end
 }
