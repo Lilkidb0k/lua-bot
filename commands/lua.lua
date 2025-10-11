@@ -2,15 +2,51 @@
 local client = _G.client
 local emojis = _G.emojis
 local colors = _G.colors
-local resolveEmoji = _G.resolveEmoji
+
+local function prettyPrintTable(t, indent)
+    indent = indent or 0
+    local lines = {}
+    local padding = string.rep("  ", indent)
+
+    if type(t) ~= "table" then
+        return tostring(t)
+    end
+
+    table.insert(lines, "{")
+    for k, v in pairs(t) do
+        local key
+        if type(k) == "string" and k:match("^%a[%w_]*$") then
+            key = k
+        else
+            key = "[" .. tostring(k) .. "]"
+        end
+
+        local value
+        if type(v) == "table" then
+            value = prettyPrintTable(v, indent + 1)
+        elseif type(v) == "string" then
+            value = '"' .. v .. '"'
+        else
+            value = tostring(v)
+        end
+
+        table.insert(lines, string.rep("  ", indent + 1) .. key .. " = " .. value .. ",")
+    end
+    table.insert(lines, padding .. "}")
+    return table.concat(lines, "\n")
+end
 
 local function prettyLine(...)
     local ret = {}
     for i = 1, select('#', ...) do
-        local arg = tostring(select(i, ...))
-        table.insert(ret, arg)
+        local val = select(i, ...)
+        if type(val) == "table" then
+            table.insert(ret, prettyPrintTable(val))
+        else
+            table.insert(ret, tostring(val))
+        end
     end
-    return table.concat(ret, '\t')
+    return table.concat(ret, "\t")
 end
 
 local function printLine(...)
@@ -22,22 +58,29 @@ local function printLine(...)
     return table.concat(ret, '\t')
 end
 
+local function code(str) return "```\n" .. str .. "```" end
+
 return {
     name = "lua",
     description = "Execute lua code.",
     requiredPermissions = { "DEVELOPER" },
     callback = function(message, args)
-
         local toexec = table.concat(args, " ")
-        if toexec == "" or toexec == " " then return print("No code to execute.") end
+		local msg = message
+		if toexec == "" or toexec == " " then return end
 
-        toexec = toexec:gsub('```\n?', ''):gsub("“", '"'):gsub("”", '"')
+		toexec = toexec:gsub('```\n?', '')
+		toexec = toexec:gsub("“", '"')
+		toexec = toexec:gsub("”", '"')
 
-        local lines = {}
-        local sandbox = {}
+		local lines = {}
+		local sandbox = {}
 
-        sandbox.print = function(...) table.insert(lines, printLine(...)) end
-        sandbox.p = function(...) table.insert(lines, prettyLine(...)) end
+		for key, val in pairs(_G) do sandbox[key] = val end
+
+		sandbox.print = function(...) table.insert(lines, printLine(...)) end
+
+		sandbox.p = function(...) table.insert(lines, prettyLine(...)) end
 
         sandbox.message = message
         sandbox.msg = message
@@ -69,6 +112,7 @@ return {
         sandbox.sqldb = _G.sqldb
         sandbox.sqlite3 = _G.sqlite3
         sandbox.fs = _G.fs
+        sandbox.config = _G.sqldb:get(message.guild.id)
 
         sandbox.embed = nil
 
@@ -152,100 +196,135 @@ return {
             end
         end
 
-        local fn, syntaxError = load(toexec, 'Sandbox', 't', sandbox)
-        if not fn then
-            return message:reply({
-                embed = {
-                    description = emojis.warning .. " Syntax error in the code.",
-                    fields = {
-                        { name = "Code:", value = "```lua\n" .. toexec .. "```" },
-                        { name = "Error:", value = "```" .. syntaxError .. "```" }
-                    },
-                    color = colors.warning
-                }
-            })
-        end
-
-        local success, runtimeError = pcall(fn)
-        if not success then
-            return message:reply({
-                embed = {
-                    description = emojis.error .. " Runtime error occurred.",
-                    fields = {
-                        { name = "Code:", value = "```lua\n" .. toexec .. "```" },
-                        { name = "Error:", value = "```" .. runtimeError .. "```" }
-                    },
-                    color = colors.error
-                }
-            })
-        end
-
-        local output = table.concat(lines, '\n')
-        local sendAsFile = #output > 1900
-
-        if sandbox.embed and type(sandbox.embed) == "table" and next(sandbox.embed) then
-            message:addReaction(resolveEmoji(emojis.success).hash)
-            return message.channel:send({ embed = sandbox.embed })
-        end
-
         local response = message:reply({
-            embed = {
-                description = emojis.loading .. " The following code is being executed...\n```lua\n" .. toexec .. "```",
-                color = colors.blank,
-                author = {
-                    name = message.member.name,
-                    icon_url = message.member.avatarURL
-                }
-            }
-        })
+			embed = {
+				description = emojis.loading .. " The following code is being executed...\n```lua\n" .. toexec .. "```",
+				color = colors.blank,
+				author = {
+					name = message.member.name,
+					icon_url = message.member.avatarURL
+				}
+			}
+		})
 
-        local tosendlines = table.concat(lines, '\n')
-        local sendasfile = #tosendlines > 1900
+		sandbox.console = response
+		sandbox.response = response
 
-        timer.sleep(50)
+		local fn, syntaxError = load(toexec, 'Orbit', 't', sandbox)
+		if not fn then
+			if response then
+				response:update({
+					embed = {
+						description = emojis.warning .. " A syntax error occurred while running this code.",
+						fields = {
+							{
+								name = "Code:",
+								value = ">>> ```lua\n" .. toexec .. "```"
+							},
+							{
+								name = "Runtime Error:",
+								value = ">>> ```" .. syntaxError .. "```"
+							}
+						},
+						color = colors.warning,
+						author = {
+							name = message.member.name,
+							icon_url = message.member.avatarURL
+						}
+					}
+				})
+			end
 
-        if #lines ~= 0 then
-            if sendasfile then
-                response:update({
-                    embed = {
-                        description = emojis.success .. " Executed successfully.\n-# " .. emojis.document ..
-                            " Output (" .. #lines .. " lines, " .. #tosendlines .. " characters):",
-                        color = colors.success,
-                        author = {
-                            name = message.member.name,
-                            icon_url = message.member.avatarURL
-                        }
-                    }
-                })
+			return
+		end
 
-                response.channel:send({
-                    files = { { "output.txt", tosendlines } }
-                })
-            else
-                response:update({
-                    embed = {
-                        description = emojis.success .. " Executed successfully.\n-# " .. emojis.document ..
-                            " Output (" .. #lines .. " lines, " .. #tosendlines .. " characters):\n```\n" ..
-                            tosendlines .. "```",
-                        color = colors.success,
-                        author = {
-                            name = message.member.name,
-                            icon_url = message.member.avatarURL
-                        }
-                    }
-                })
-            end
-        else
-            response:update({
-                embed = {
-                    description = emojis.success .. " Executed successfully.",
-                    color = colors.success,
-                    author = {
-                        name = message.member.name,
-                        icon_url = message.member.avatarURL
-                    }
-                }
-            })
-        end
+		local success, runtimeError = pcall(fn)
+		if not success then
+			if response then
+				response:update({
+					embed = {
+						description = emojis.error .. " A runtime error occurred while running this code.",
+						fields = {
+							{
+								name = "Code:",
+								value = ">>> ```lua\n" .. toexec .. "```"
+							},
+							{
+								name = "Runtime Error:",
+								value = ">>> ```" .. runtimeError .. "```"
+							}
+						},
+						color = colors.error,
+						author = {
+							name = message.member.name,
+							icon_url = message.member.avatarURL
+						}
+					}
+				})
+			end
+
+			return
+		end
+
+		local tosendlines = table.concat(lines, '\n')
+		local sendasfile = tosendlines:len() > 1900
+
+		if not (message and message.content) then return end
+
+		if #lines ~= 0 then
+			if sendasfile then
+				if response then
+					response:update({
+						embed = {
+							description = emojis.success .. " This code has been successfully executed.\n-# " .. emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):",
+							color = colors.success,
+							author = {
+								name = message.member.name,
+								icon_url = message.member.avatarURL
+							}
+						}
+					})
+				end
+
+				return message.channel:send({
+					files = {
+						{
+							"output.txt",
+							tosendlines
+						}
+					}
+				})
+			else
+				if response then
+					response:update({
+						embed = {
+							description = emojis.success .. " This code has been successfully executed.\n-# " .. emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):\n```\n" .. tosendlines .. "```",
+							color = colors.success,
+							author = {
+								name = message.member.name,
+								icon_url = message.member.avatarURL
+							}
+						}
+					})
+				end
+
+				return
+			end
+		else
+			if response then
+				response:update({
+					embed = {
+						description = emojis.success .. " This code has been successfully executed.",
+						color = colors.success,
+						author = {
+							name = message.member.name,
+							icon_url = message.member.avatarURL
+						}
+					}
+				})
+			end
+
+			return
+		end
     end
 }

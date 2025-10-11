@@ -83,7 +83,12 @@ local permissions_menu = discordia.SelectMenu(
                 label = "Edit Discord Administrator Roles",
                 value = "edit_discord_admin_roles",
                 emoji = _G.resolvedEmojis.tools
-            }
+            },
+            {
+                label = "Edit Discord Manager Roles",
+                value = "edit_discord_manager_roles",
+                emoji = _G.resolvedEmojis.setting
+            },
         }
     }
 )
@@ -189,36 +194,39 @@ return {
         local succ, config = sqldb:registerGuild(ctx.guild.id)
         if not succ then
             if slash then
-                return ctx:reply({
-                    embed = {
-                        description = _G.emojis.fail ..
-                            " Failed to initialize configuration for your server.",
-                        color = _G.colors.fail
-                    },
-                    ephemeral = true
-                })
+                return ctx:fail("Failed to initialize configuration for your server.", nil, true)
             else
-                return ctx:reply({
-                    embed = {
-                        description = _G.emojis.fail ..
-                            " Failed to initialize configuration for your server.",
-                        color = _G.colors.fail
-                    }
-                })
+                return ctx:fail("Failed to initialize configuration for your server.", nil, true)
             end
         end
 
+        local allModules = {
+            "staff_management",
+            "discord_moderation",
+        }
+
+        config.modules = config.modules or {}
+        for _, modName in ipairs(allModules) do
+            if not config.modules[modName] then
+                config.modules[modName] = { enabled = false }
+            else
+                config.modules[modName].enabled = config.modules[modName].enabled or false
+            end
+        end
+
+        sqldb:set(ctx.guild.id, { modules = config.modules }, "AUTO_POPULATE_MODULES")
+
         local function getComps(pageName)
-            if pageName == "config_menu" then
+            if pageName == "config_page" then
                 return discordia.Components():selectMenu(configuration_menu):raw()
 
-            elseif pageName == "bot_settings" then
+            elseif pageName == "bot_settings_page" then
                 return discordia.Components({ bot_settings_menu, back_button }):raw()
 
             elseif pageName == "permissions_page" then
                 return discordia.Components({ permissions_menu, back_button}):raw()
 
-            elseif pageName == "modules_menu" then
+            elseif pageName == "modules_page" then
                 return discordia.Components({ modules_menu, back_button }):raw()
 
             elseif pageName == "staff_management_module_page" then
@@ -226,16 +234,18 @@ return {
 
             elseif pageName == "discord_moderation_module_page" then
                 return discordia.Components({ discord_moderation_module_menu, back_button}):raw()
+                
+            else return {}
             end
         end
 
         local function getEmbedDescription(pageName)
-            if pageName == "config_menu" then
+            if pageName == "config_page" then
                 return "## " .. _G.emojis.setting .. " Configuration Menu\n"
 
                     .. "> Welcome to the " .. _G.emojis.setting .. " **Configuration Menu**. To get started configurating the bot, select an option below."
 
-            elseif pageName == "bot_settings" then
+            elseif pageName == "bot_settings_page" then
                 local disabled = (config.disabledcommands and #config.disabledcommands > 0)
                 and table.concat(config.disabledcommands, ", ")
                 or "None"
@@ -248,28 +258,35 @@ return {
                     .. _G.emojis.right .. " **Disabled Commands:** `" .. disabled .. "`"
 
             elseif pageName == "permissions_page" then
-                local NBSP = "\194\160"
-                local indent = string.rep(NBSP, 2)
 
-                local modRolesText = indent .. _G.emojis.right .. " None"
+                local modRolesText = emojis.space .. _G.emojis.right .. " None"
                 if config.discord_mod_roles and #config.discord_mod_roles > 0 then
                     local lines = {}
                     for _, roleId in ipairs(config.discord_mod_roles) do
-                        table.insert(lines, indent .. _G.emojis.right .. " <@&" .. roleId .. ">")
+                        table.insert(lines, emojis.space .. _G.emojis.right .. " <@&" .. roleId .. ">")
                     end
                     modRolesText = table.concat(lines, "\n")
                 end
 
-                local adminRolesText = indent .. _G.emojis.right .. " None"
+                local adminRolesText = emojis.space .. _G.emojis.right .. " None"
                 if config.discord_admin_roles and #config.discord_admin_roles > 0 then
                     local lines = {}
                     for _, roleId in ipairs(config.discord_admin_roles) do
-                        table.insert(lines, indent .. _G.emojis.right .. " <@&" .. roleId .. ">")
+                        table.insert(lines, emojis.space .. _G.emojis.right .. " <@&" .. roleId .. ">")
                     end
                     adminRolesText = table.concat(lines, "\n")
                 end
 
-                return "## " .. _G.emojis.permission .. " Bot Settings\n"
+                local managerRolesText = emojis.space .. emojis.right .. " None"
+                if config.discord_manager_roles and #config.discord_manager_roles > 0 then
+                    local lines = {}
+                    for _, roleId in ipairs(config.discord_manager_roles) do
+                        table.insert(lines, emojis.space .. emojis.right .. " <@&" .. roleId .. ">")
+                    end
+                    managerRolesText = table.concat(lines, "\n")
+                end
+
+                return "## " .. _G.emojis.permission .. " Permissions\n"
                     .. _G.emojis.right .. " Configure and restrict various features to specific roles.\n\n"
                     .. "### " .. _G.emojis.setting .. " Configurations\n"
 
@@ -279,7 +296,10 @@ return {
                     .. _G.emojis.right .. " **Discord Administrator Roles:**\n"
                     .. adminRolesText .. "\n\n"
 
-            elseif pageName == "modules_menu" then
+                    .. emojis.right .. " **Discord Manager Roles:**\n"
+                    .. managerRolesText .. "\n\n"
+
+            elseif pageName == "modules_page" then
                 return "## " .. _G.emojis.module .. " Modules\n"
                     .. _G.emojis.right .. " Select a module below to toggle and configure."
 
@@ -294,6 +314,7 @@ return {
                     .. _G.emojis.right .. " **Module Enabled:** " .. (smConfig.enabled and _G.emojis.success or _G.emojis.fail) .. "\n"
                     .. _G.emojis.right .. " **Infraction Channel:** " .. infractionChannel .. "\n"
                     .. _G.emojis.right .. " **Infraction Embed:** " .. infractionEmbed .. "\n"
+                    .. _G.emojis.right .. " **Infraction Types:**\n" .. emojis.space .. emojis.right .. table.concat(smConfig.infraction_types or {}, "\n" .. emojis.space .. emojis.right)
 
             elseif pageName == "discord_moderation_module_page" then
                 local dmConfig = config.modules and config.modules.discord_moderation or {}
@@ -307,7 +328,54 @@ return {
             end
         end
 
-        local currentPage = "config_menu"
+        local function extractPages()
+            local pages = {}
+            
+            local getCompsSrc = string.dump(getComps)
+            local getDescSrc = string.dump(getEmbedDescription)
+
+            local function extractFromSource(src)
+                local t = {}
+                for page in string.gmatch(src, '([_%a]+_page)') do
+                    t[page] = true
+                end
+                return t
+            end
+
+            local compsPages = extractFromSource(getCompsSrc)
+            local descPages = extractFromSource(getDescSrc)
+
+            for page in pairs(compsPages) do pages[page] = true end
+            for page in pairs(descPages) do pages[page] = true end
+
+            local arr = {}
+            for p in pairs(pages) do table.insert(arr, p) end
+            return arr
+        end
+        local pages = extractPages()
+
+        local function findClosestPage(input)
+            input = input:lower():gsub("%s+", "")
+            local bestMatch, bestScore = "config_page", 0
+
+            for _, page in ipairs(pages) do
+                local normalizedPage = page:lower():gsub("_", "")
+                if normalizedPage:match("^" .. input) then
+                    return page
+                end
+                if normalizedPage:find(input, 1, true) then
+                    local score = #input / #normalizedPage
+                    if score > bestScore then
+                        bestScore = score
+                        bestMatch = page
+                    end
+                end
+            end
+
+            return bestMatch
+        end
+
+        local currentPage = (args and args ~= "" and args[1] and findClosestPage(args[1])) or "config_page"
         local history = {}
 
         local function updatePage(ia, newPage, fromBack)
@@ -338,7 +406,7 @@ return {
             if lastPage then
                 updatePage(ia, lastPage, true)
             else
-                updatePage(ia, "main_menu", true)
+                updatePage(ia, "config_page", true)
             end
         end
 
@@ -373,10 +441,10 @@ return {
             elseif ia.data.custom_id == "configuration_menu" then
                 local choice = ia.data.values and ia.data.values[1]
                 if choice == "bot_settings" then
-                    updatePage(ia, "bot_settings")
+                    updatePage(ia, "bot_settings_page")
 
                 elseif choice == "modules" then
-                    updatePage(ia, "modules_menu")
+                    updatePage(ia, "modules_page")
 
                 elseif choice == "role_permissions" then
                     updatePage(ia, "permissions_page")
@@ -397,7 +465,7 @@ return {
                         config.prefix = responses["Edit Prefix"]
                         sqldb:set(ctx.guild.id, { prefix = config.prefix }, "EDIT_PREFIX_SETUP")
 
-                        updatePage(mia, "bot_settings")
+                        updatePage(mia, "bot_settings_page")
                     end, true)
 
                 elseif choice == "edit_disabled_commands" then
@@ -429,7 +497,7 @@ return {
                         config.disabledcommands = commands
                         sqldb:set(ctx.guild.id, { disabledcommands = config.disabledcommands }, "EDIT_DISABLED_COMMANDS_SETUP")
                         
-                        updatePage(mia, "bot_settings")
+                        updatePage(mia, "bot_settings_page")
                     end, true)
                 end
 
@@ -441,7 +509,7 @@ return {
                     _G.roleSelect(ia, {
                         placeholder = "Select one or more moderator roles...",
                         min = 0,
-                        max = 5,
+                        max = 10,
                         defaults = config.discord_mod_roles
                     }, function(selected, cia)
 
@@ -455,12 +523,26 @@ return {
                     _G.roleSelect(ia, {
                         placeholder = "Select one or more administrator roles...",
                         min = 0,
-                        max = 5,
+                        max = 10,
                         defaults = config.discord_admin_roles
                     }, function(selected, cia)
 
                         config.discord_admin_roles = selected
                         sqldb:set(ia.guild.id, { discord_admin_roles = config.discord_admin_roles }, "EDIT_DISCORD_ADMIN_ROLES_SETUP")
+
+                        updatePage(ia, "permissions_page")
+                    end)
+
+                elseif choice == "edit_discord_manager_roles" then
+                    _G.roleSelect(ia, {
+                        placeholder = "Select one or more manager roles...",
+                        min = 0,
+                        max = 10,
+                        defaults = config.discord_manager_roles
+                    }, function(selected, cia)
+
+                        config.discord_manager_roles = selected
+                        sqldb:set(ia.guild.id, { discord_manager_roles = config.discord_manager_roles }, "EDIT_DISCORD_MANAGER_ROLES_SETUP")
 
                         updatePage(ia, "permissions_page")
                     end)
@@ -510,16 +592,110 @@ return {
                     local builtEmbed = config.modules.staff_management.infraction_embed or nil
 
                     local varList = {
-                        issuer_name = "The name of the user who issued the infraction.",
-                        server_name = "The name of the server.",
-                        server_id = "The ID of the server.",
+                        ["issuer.name"] = "The issuer's name.",
+                        ["issuer.username"] = "The issuer's username.",
+                        ["issuer.mention"] = "The issuer's mention.",
+                        ["issuer.id"] = "The issuer's user ID.",
+                        ["issuer.avatar"] = "The issuer's avatar URL.",
+
+                        ["offender.name"] = "The offender's name.",
+                        ["offender.username"] = "The offender's username.",
+                        ["offender.mention"] = "The offender's mention.",
+                        ["offender.id"] = "The offender's user ID.",
+                        ["offender.avatar"] = "The offender's avatar URL",
+
+                        ["infraction.type"] = "The infraction type.",
+                        ["infraction.reason"] = "The infraction reason.",
+                        ["infraction.notes"] = "The infraction notes.",
+                        ["infraction.id"] = "The infraction ID.",
+
+                        ["timestamp"] = "The Unix Epoch timestamp.",
                     }
                     _G.embedBuilder(ia, builtEmbed, function(finalEmbed, saved)
                         builtEmbed = finalEmbed
                         config.modules.staff_management.infraction_embed = builtEmbed
                         sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_EMBED_SETUP")
                         updatePage(ia, "staff_management_module_page")
-                    end, ia)
+                    end, ia, varList)
+
+                elseif choice == "add_infraction_type" then
+                    prompt(ia, "Infraction Type", {
+                        {
+                            question = "Add Infraction Type",
+                            placeholder = "What should this infraction type be called?",
+                            max = 50
+                        },
+                    }, function(mia, responses)
+                        local newType = responses["Add Infraction Type"]
+                        if not newType or newType:match("^%s*$") then
+                            return mia:fail("Invalid infraction type.", nil, true)
+                        end
+
+                        config.modules.staff_management.infraction_types = config.modules.staff_management.infraction_types or {}
+
+                        if not table.find(config.modules.staff_management.infraction_types, newType) then
+                            table.insert(config.modules.staff_management.infraction_types, newType)
+                            sqldb:set(ctx.guild.id, { modules = config.modules }, "ADD_INFRACTION_TYPE_SETUP")
+                        else
+                            mia:fail("This infraction type already exists.", nil, true)
+                        end
+
+                        updatePage(mia, "staff_management_module_page")
+                    end)
+
+                elseif choice == "edit_infraction_type" then
+                    local types = config.modules.staff_management.infraction_types
+                    if #types == 0 then return ia:fail("No infraction types to edit.", nil, true) end
+
+                    local options = {}
+                    for _, t in ipairs(types) do
+                        table.insert(options, { label = t, value = t })
+                    end
+
+                    optionsSelect(ia, "Select Infraction Type to Edit", function(selected, cia)
+                        if not selected then return cia:fail("No infraction type selected.", nil, true) end
+                        
+                        prompt(cia, "Rename Infraction Type", {
+                            { question = "New Name", placeholder = "Enter new name...", max = 50 }
+                        }, function(mia, responses)
+                            local newName = responses["New Name"]
+                            if not newName or newName:match("^%s*$") then
+                                return mia:fail("Invalid name.", nil, true)
+                            end
+
+                            local idx = table.find(types, selected)
+                            if idx then
+                                mia:deferUpdate(true)
+                                types[idx] = newName
+                                sqldb:set(ctx.guild.id, { modules = config.modules }, "EDIT_INFRACTION_TYPE_SETUP")
+                                updatePage(ia, "staff_management_module_page")
+                            else
+                                mia:fail("Failed to find the selected infraction type.", nil, true)
+                            end
+                        end)
+                    end, true, options, 1, nil, true)
+
+                elseif choice == "remove_infraction_type" then
+                    local types = config.modules.staff_management.infraction_types
+                    if #types == 0 then return ia:fail("No infraction types to remove.", nil, true) end
+
+                    local options = {}
+                    for _, t in ipairs(types) do
+                        table.insert(options, { label = t, value = t })
+                    end
+
+                    optionsSelect(ia, "Select Infraction Type to Remove", function(selected, cia)
+                        if not selected then return cia:fail("No infraction type selected.", nil, true) end
+
+                        local idx = table.find(types, selected)
+                        if idx then
+                            table.remove(types, idx)
+                            sqldb:set(ctx.guild.id, { modules = config.modules }, "REMOVE_INFRACTION_TYPE_SETUP")
+                            updatePage(ia, "staff_management_module_page")
+                        else
+                            cia:fail("Failed to find the selected infraction type.", nil, true)
+                        end
+                    end, true, options, 1, nil, true)
                 end
 
 -- [[ Discord Moderation ]] --

@@ -52,9 +52,6 @@ return {
         local seenModules, seenCategories = {}, {}
         local moduleOptions, categoryOptions = {}, {}
 
-        local NBSP = "\194\160"
-        local indent = string.rep(NBSP, 3)
-
         for _, cmd in pairs(_G.commands) do
             if cmd.module then
                 local mod = cmd.module:lower()
@@ -140,19 +137,19 @@ return {
                     if cmd.category and cmd.category:lower() == cat:lower() and not seenNames[cmd.name] then
                         seenNames[cmd.name] = true
 
-                        local cmdDisplay = cmd.slashCommand and
-                            ("**`/" .. cmd.name .. "`**") or
-                            ("**`" .. prefix .. cmd.name .. "`**")
+                        local cmdDisplay = cmd.slashCommand
+                            and ("**`/" .. cmd.name .. "`**")
+                            or ("**`" .. prefix .. cmd.name .. "`**")
 
                         if cmd.aliases and #cmd.aliases > 0 then
                             local aliasStr = {}
                             for _, a in ipairs(cmd.aliases) do
                                 table.insert(aliasStr, "`" .. prefix .. a .. "`")
                             end
-                            cmdDisplay = cmdDisplay .. " (" .. table.concat(aliasStr, ", ") .. ")"
+                            cmdDisplay = cmdDisplay .. " *(" .. table.concat(aliasStr, ", ") .. ")*"
                         end
 
-                        local description = cmd.description or "No description"
+                        local description = cmd.description or "N/A"
 
                         if cmd.requiredPermissions and #cmd.requiredPermissions > 0 then
                             local perms = {}
@@ -160,11 +157,24 @@ return {
                                 table.insert(perms, "`" .. p .. "`")
                             end
                             description = description
-                                .. "\n" .. indent .. _G.emojis.right .. " **Permissions:** "
-                                .. table.concat(perms, ", ")
+                                .. "\n" .. emojis.space .. emojis.right .. " **Permissions:**"
+                                .. "\n" .. emojis.space .. emojis.space .. emojis.right .. " " .. table.concat(perms, "\n" .. emojis.space .. emojis.space .. emojis.right .. " ")
                         end
 
-                        table.insert(lines, _G.emojis.right .. " " .. cmdDisplay .. " - " .. description)
+                        if cmd.subcommands and #cmd.subcommands > 0 then
+                            local subcmds = {}
+                            for _, s in ipairs(cmd.subcommands) do
+                                table.insert(subcmds, "`/" .. cmd.name .. " " .. s .. "`")
+                            end
+                            description = description
+                                .. "\n" .. emojis.space .. emojis.right .. " **Subcommands:**"
+                                .. "\n" .. emojis.space .. emojis.space .. emojis.right .. " " .. table.concat(subcmds, "\n" .. emojis.space .. emojis.space .. emojis.right .. " ")
+                        end
+
+                        table.insert(lines,
+                            "\n" .. emojis.right .. " " .. cmdDisplay .. "\n"
+                            .. emojis.space .. emojis.right .. " " .. description
+                        )
                     end
                 end
                 return table.concat(lines, "\n")
@@ -177,19 +187,19 @@ return {
                     if cmd.module and cmd.module:lower() == mod:lower() and not seenNames[cmd.name] then
                         seenNames[cmd.name] = true
 
-                        local cmdDisplay = cmd.slashCommand and
-                            ("**`/" .. cmd.name .. "`**") or
-                            ("**`" .. prefix .. cmd.name .. "`**")
+                        local cmdDisplay = cmd.slashCommand
+                            and ("**`/" .. cmd.name .. "`**")
+                            or ("**`" .. prefix .. cmd.name .. "`**")
 
                         if cmd.aliases and #cmd.aliases > 0 then
                             local aliasStr = {}
                             for _, a in ipairs(cmd.aliases) do
                                 table.insert(aliasStr, "`" .. prefix .. a .. "`")
                             end
-                            cmdDisplay = cmdDisplay .. " (" .. table.concat(aliasStr, ", ") .. ")"
+                            cmdDisplay = cmdDisplay .. " *(" .. table.concat(aliasStr, ", ") .. ")*"
                         end
 
-                        local description = cmd.description or "No description"
+                        local description = cmd.description or "N/A"
 
                         if cmd.requiredPermissions and #cmd.requiredPermissions > 0 then
                             local perms = {}
@@ -197,11 +207,24 @@ return {
                                 table.insert(perms, "`" .. p .. "`")
                             end
                             description = description
-                                .. "\n" .. indent .. _G.emojis.right .. " **Permissions:** "
-                                .. table.concat(perms, ", ")
+                                .. "\n" .. emojis.space .. emojis.right .. " **Permissions:**"
+                                .. "\n" .. emojis.space .. emojis.space .. emojis.right .. " " .. table.concat(perms, "\n" .. emojis.space .. emojis.space .. emojis.right .. " ")
                         end
 
-                        table.insert(lines, _G.emojis.right .. " " .. cmdDisplay .. " - " .. description)
+                        if cmd.subcommands and #cmd.subcommands > 0 then
+                            local subcmds = {}
+                            for _, s in ipairs(cmd.subcommands) do
+                                table.insert(subcmds, "`/" .. cmd.name .. " " .. s .. "`")
+                            end
+                            description = description
+                                .. "\n" .. emojis.space .. emojis.right .. " **Subcommands:**"
+                                .. "\n" .. emojis.space .. emojis.space .. emojis.right .. " " .. table.concat(subcmds, "\n" .. emojis.space .. emojis.space .. emojis.right .. " ")
+                        end
+
+                        table.insert(lines,
+                            "\n" .. emojis.right .. " " .. cmdDisplay .. "\n"
+                            .. emojis.space .. emojis.right .. " " .. description
+                        )
                     end
                 end
                 return table.concat(lines, "\n")

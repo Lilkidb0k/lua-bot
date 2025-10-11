@@ -9,6 +9,7 @@ return {
     description = "View the moderation logs on the given user.",
     category = "Moderation",
     module = "discord_moderation",
+    requiredPermissions = {"DISCORD_MOD"},
     slashCommand = slashCommand,
     aliases = { "cases", "ml" },
     hybridCallback = function(interaction, args, slash)

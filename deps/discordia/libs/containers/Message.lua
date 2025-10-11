@@ -389,14 +389,36 @@ end
 @r Message
 @d Equivalent to `Message.channel:send(content)`.
 ]=]
-function Message:reply(content)
-	if type(content) == "table" then
-        content.reference = { message = self.id }
-    else
-        content = { content = content, reference = { message = self.id } }
-    end    
+function Message:reply(content, silent, reference, mention)
+	reference = ((reference == nil) and true) or false
+	mention = not not mention
+        
+   	if type(content) == "table" and reference then
+        content.reference = {message = self.id, mention = mention}
+    elseif type(content) == "string" and reference then
+        content = {content = content, reference = {message = self.id, mention = mention}}
+    end
+	return self._parent:send(content, silent)
+end
 
-    return self._parent:send(content)
+function Message:success(content, silent, emoji)
+	emoji = (emoji and type(emoji) == "string") or _G.emojis.success
+	return self:reply({embed = {description = emoji .. " " .. content, color = _G.colors.success}}, silent)
+end
+
+function Message:warning(content, silent, emoji)
+	emoji = (emoji and type(emoji) == "string") or _G.emojis.warning
+	return self:reply({embed = {description = emoji .. " " .. content, color = _G.colors.warning}}, silent)
+end
+
+function Message:fail(content, silent, emoji)
+	emoji = (emoji and type(emoji) == "string") or _G.emojis.fail
+	return self:reply({embed = {description = emoji .. " " .. content, color = _G.colors.fail}}, silent)
+end
+    
+function Message:loading(content, silent)
+    content = (content and (" " .. content)) or ""
+    return self:reply({embed = {description = _G.emojis.loading .. content, color = _G.colors.blank}}, silent)
 end
 
 --[=[

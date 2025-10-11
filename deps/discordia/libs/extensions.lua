@@ -49,6 +49,14 @@ function table.copy(tbl)
 	return ret
 end
 
+function table.clone(tbl)
+	local ret = {}
+	for k, v in pairs(tbl) do
+		ret[k] = v
+	end
+	return ret
+end
+
 function table.deepcopy(tbl)
 	local ret = {}
 	for k, v in pairs(tbl) do
@@ -119,6 +127,15 @@ function table.search(tbl, value)
 		end
 	end
 	return nil
+end
+
+function table.find(tbl, value)
+    for i, v in ipairs(tbl) do
+        if v == value then
+            return i
+        end
+    end
+    return nil
 end
 
 function table.slice(tbl, start, stop, step)
@@ -219,6 +236,29 @@ function string.random(len, mn, mx)
 		insert(ret, char(random(mn, mx)))
 	end
 	return concat(ret)
+end
+
+function string.capitalize(str)
+    str = str:gsub("[_-]", " ")
+
+    str = str:gsub("(%a)([%w']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end)
+
+    return str
+end
+
+function string.truncate(str, maxLength, suffix, keepSuffix)
+    suffix = suffix or "..."
+    if #str > maxLength then
+        if keepSuffix then
+            return str:sub(1, maxLength - #suffix) .. suffix
+        else
+            return str:sub(1, maxLength)
+        end
+    else
+        return str
+    end
 end
 
 local math = {}

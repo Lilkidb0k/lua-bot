@@ -22,16 +22,9 @@ local sqldb = {}
 
 local DEFAULT_CONFIG = {
     prefix = "!",
-    disabledcommands = {},
+    disabledcommands = nil,
 
-    modules = {
-        staff_management = {
-          enabled = false
-        },
-        discord_moderation = {
-          enabled = false
-        }
-    },
+    modules = {},
 }
 
 -- Helper Functions --
