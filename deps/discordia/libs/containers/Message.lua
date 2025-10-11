@@ -173,8 +173,8 @@ function Message:_setOldContent(d)
 	end
 end
 
-function Message:_modify(payload)
-	local data, err = self.client._api:editMessage(self._parent._id, self._id, payload)
+function Message:_modify(payload, files)
+	local data, err = self.client._api:editMessage(self._parent._id, self._id, payload, files)
 	if data then
 		self:_setOldContent(data)
 		self:_load(data)
@@ -261,6 +261,59 @@ must be authored by the current user. (ie: you cannot change the embed of messag
 sent by other users).
 ]=]
 function Message:update(data)
+    if self.interaction then
+        if self.interaction.editReply then
+            return self.interaction:editReply(data)
+        elseif self.interaction.update then
+            return self.interaction:update(data)
+        end
+    end
+
+    local files
+    local err
+
+    local function parseFile(obj, files)
+        if type(obj) == 'string' then
+            local data, err = readFileSync(obj)
+            if not data then return nil, err end
+            files = files or {}
+            table.insert(files, {remove(splitPath(obj)), data})
+        elseif type(obj) == 'table' and type(obj[1]) == 'string' and type(obj[2]) == 'string' then
+            files = files or {}
+            table.insert(files, obj)
+        else
+            return nil, 'Invalid file object: ' .. tostring(obj)
+        end
+        return files
+    end
+
+    if data.file then
+        files, err = parseFile(data.file)
+        if err then return nil, err end
+    end
+
+    if type(data.files) == 'table' then
+        for _, file in ipairs(data.files) do
+            files, err = parseFile(file, files)
+            if err then return nil, err end
+        end
+    end
+
+    local payload = {
+        content = data.content or null,
+		embed = data.embed or null,
+        embeds = data.embeds or null,
+        components = data.components or null,
+        allowed_mentions = {
+            parse = {'users', 'roles', 'everyone'},
+            replied_user = not not self._reply_target,
+        }
+    }
+
+    return self:_modify(payload, files)
+end
+--[[
+function Message:update(data)
 	return self:_modify({
 		content = data.content or null,
 		embed = data.embed or null,
@@ -271,6 +324,7 @@ function Message:update(data)
 		},
 	})
 end
+--]]
 
 --[=[
 @m pin
@@ -415,7 +469,7 @@ function Message:fail(content, silent, emoji)
 	emoji = (emoji and type(emoji) == "string") or _G.emojis.fail
 	return self:reply({embed = {description = emoji .. " " .. content, color = _G.colors.fail}}, silent)
 end
-    
+
 function Message:loading(content, silent)
     content = (content and (" " .. content)) or ""
     return self:reply({embed = {description = _G.emojis.loading .. content, color = _G.colors.blank}}, silent)

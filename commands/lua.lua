@@ -196,135 +196,128 @@ return {
             end
         end
 
+        -- Send initial "executing..." embed
         local response = message:reply({
-			embed = {
-				description = emojis.loading .. " The following code is being executed...\n```lua\n" .. toexec .. "```",
-				color = colors.blank,
-				author = {
-					name = message.member.name,
-					icon_url = message.member.avatarURL
-				}
-			}
-		})
+            embed = {
+                description = emojis.loading .. " The following code is being executed...\n```lua\n" .. toexec .. "```",
+                color = colors.blank,
+                author = {
+                    name = message.member.name,
+                    icon_url = message.member.avatarURL
+                }
+            }
+        })
 
-		sandbox.console = response
-		sandbox.response = response
+        -- Safety check (Discord may return nil if message send failed)
+        if not response or not response.update then
+            return message:reply(emojis.error .. " Failed to send or update the response message.")
+        end
 
-		local fn, syntaxError = load(toexec, 'Orbit', 't', sandbox)
-		if not fn then
-			if response then
-				response:update({
-					embed = {
-						description = emojis.warning .. " A syntax error occurred while running this code.",
-						fields = {
-							{
-								name = "Code:",
-								value = ">>> ```lua\n" .. toexec .. "```"
-							},
-							{
-								name = "Runtime Error:",
-								value = ">>> ```" .. syntaxError .. "```"
-							}
-						},
-						color = colors.warning,
-						author = {
-							name = message.member.name,
-							icon_url = message.member.avatarURL
-						}
-					}
-				})
-			end
+        -- Load and execute sandboxed Lua code
+        local fn, syntaxError = load(toexec, 'Orbit', 't', sandbox)
+        if not fn then
+            coroutine.wrap(function()
+                response:update({
+                    embeds = {{
+                        description = emojis.warning .. " A syntax error occurred while running this code.",
+                        fields = {
+                            {
+                                name = "Code:",
+                                value = "```lua\n" .. toexec .. "```"
+                            },
+                            {
+                                name = "Runtime Error:",
+                                value = "```" .. syntaxError .. "```"
+                            }
+                        },
+                        color = colors.warning,
+                        author = {
+                            name = message.member.name,
+                            icon_url = message.member.avatarURL
+                        }
+                    }}
+                })
+            end)()
+            return
+        end
 
-			return
-		end
+        local success, runtimeError = pcall(fn)
+        if not success then
+            coroutine.wrap(function()
+                response:update({
+                    embeds = {{
+                        description = emojis.error .. " A runtime error occurred while running this code.",
+                        fields = {
+                            {
+                                name = "Code:",
+                                value = "```lua\n" .. toexec .. "```"
+                            },
+                            {
+                                name = "Runtime Error:",
+                                value = "```" .. runtimeError .. "```"
+                            }
+                        },
+                        color = colors.error,
+                        author = {
+                            name = message.member.name,
+                            icon_url = message.member.avatarURL
+                        }
+                    }}
+                })
+            end)()
+            return
+        end
 
-		local success, runtimeError = pcall(fn)
-		if not success then
-			if response then
-				response:update({
-					embed = {
-						description = emojis.error .. " A runtime error occurred while running this code.",
-						fields = {
-							{
-								name = "Code:",
-								value = ">>> ```lua\n" .. toexec .. "```"
-							},
-							{
-								name = "Runtime Error:",
-								value = ">>> ```" .. runtimeError .. "```"
-							}
-						},
-						color = colors.error,
-						author = {
-							name = message.member.name,
-							icon_url = message.member.avatarURL
-						}
-					}
-				})
-			end
+        local tosendlines = table.concat(lines, '\n')
+        local sendasfile = tosendlines:len() > 1900
 
-			return
-		end
+        coroutine.wrap(function()
+            if #lines == 0 then
+                response:update({
+                    embeds = {
+                        description = emojis.success .. " This code has been successfully executed (no output).",
+                        color = colors.success,
+                        author = {
+                            name = message.member.name,
+                            icon_url = message.member.avatarURL
+                        }
+                    }
+                })
+            elseif sendasfile then
+                response:update({
+                    embeds = {{
+                        description = emojis.success .. " This code has been successfully executed.\n-# " ..
+                            emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):",
+                        color = colors.success,
+                        author = {
+                            name = message.member.name,
+                            icon_url = message.member.avatarURL
+                        }
+                    }}
+                })
 
-		local tosendlines = table.concat(lines, '\n')
-		local sendasfile = tosendlines:len() > 1900
-
-		if not (message and message.content) then return end
-
-		if #lines ~= 0 then
-			if sendasfile then
-				if response then
-					response:update({
-						embed = {
-							description = emojis.success .. " This code has been successfully executed.\n-# " .. emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):",
-							color = colors.success,
-							author = {
-								name = message.member.name,
-								icon_url = message.member.avatarURL
-							}
-						}
-					})
-				end
-
-				return message.channel:send({
-					files = {
-						{
-							"output.txt",
-							tosendlines
-						}
-					}
-				})
-			else
-				if response then
-					response:update({
-						embed = {
-							description = emojis.success .. " This code has been successfully executed.\n-# " .. emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):\n```\n" .. tosendlines .. "```",
-							color = colors.success,
-							author = {
-								name = message.member.name,
-								icon_url = message.member.avatarURL
-							}
-						}
-					})
-				end
-
-				return
-			end
-		else
-			if response then
-				response:update({
-					embed = {
-						description = emojis.success .. " This code has been successfully executed.",
-						color = colors.success,
-						author = {
-							name = message.member.name,
-							icon_url = message.member.avatarURL
-						}
-					}
-				})
-			end
-
-			return
-		end
+                message.channel:send({
+                    files = {
+                        {
+                            name = "output.txt",
+                            content = tosendlines
+                        }
+                    }
+                })
+            else
+                response:update({
+                    embeds = {{
+                        description = emojis.success .. " This code has been successfully executed.\n-# " ..
+                            emojis.document .. " Output (" .. #lines .. " lines, " .. tosendlines:len() .. " characters):\n" ..
+                            "```\n" .. tosendlines .. "```",
+                        color = colors.success,
+                        author = {
+                            name = message.member.name,
+                            icon_url = message.member.avatarURL
+                        }
+                    }}
+                })
+            end
+        end)()
     end
 }

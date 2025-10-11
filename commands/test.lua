@@ -1,18 +1,21 @@
-local slashCommand = _G.tools.slashCommand("test", "Test simple pagination")
-
+-- test.lua
 return {
-    name = "test",
-    description = "Test simple pagination",
-    slashCommand = slashCommand,
-    hybridCallback = function(ctx, args, slash)
-        local pages = {
-            { description = "First page", color = 0x00ff00},
-            { description = "Second page", color = 0xffff00},
-            { description = "Final page", color = 0xff0000}
-        }
+	name = "test",
+	description = "Test simple pagination",
+	callback = function(message, args, slash)
+		local msg = message:reply({
+			embed = {
+				description = emojis.loading .. " Waiting to be updated..."
+			}
+		})
 
-        local owner = slash and ctx.user or ctx.author
+		local updatedEmbed = {
+			description = emojis.success .. " Updated successfully.",
+            color = colors.success
+		}
 
-        _G.paginate(ctx, pages, owner, { showTotalPages = true, startPage = 2 })
-    end
+		msg:update({
+			embeds = {updatedEmbed}
+		})
+	end
 }
