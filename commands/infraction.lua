@@ -16,6 +16,6 @@ return {
     subcommands = {"issue"},
     category = "Utility",
     callback = function(interaction, args, slash, subcmd)
-        interaction:reply("Infraction given!")
+        p(subcmd)
     end
 }
